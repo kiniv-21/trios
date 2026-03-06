@@ -58,7 +58,8 @@ export const products: Product[] = [
     rating: 4.5
   },
   {
-    id: '4'Jute Foldable Trays',
+    id: '4',
+    name: 'Jute Foldable Trays',
     price: 400,
     description: 'Foldable trays',
     images: [
