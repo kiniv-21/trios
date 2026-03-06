@@ -1,57 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Heart, Star, Palette, Mail, Phone, MapPin, Facebook, Instagram, Twitter, Settings } from 'lucide-react';
-import { categories } from './data/products';
+import React, { useState } from 'react';
+import { Heart, Star, Palette, Mail, Phone, MapPin, Facebook, Instagram, Twitter } from 'lucide-react';
+import { categories, products as staticProducts } from './data/products';
 import { Product } from './types';
-import { createClient } from '@supabase/supabase-js';
-import { Admin } from './pages/Admin';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
 
 function App() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showAdmin, setShowAdmin] = useState(false);
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*');
-
-      if (error) throw error;
-
-      const mappedProducts = (data || []).map(product => ({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        description: product.description,
-        images: product.images || [],
-        category: product.category,
-        featured: product.featured,
-        inStock: product.in_stock,
-        rating: product.rating
-      }));
-
-      setProducts(mappedProducts);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const filteredProducts = selectedCategory === 'all'
-    ? products
-    : products.filter(product => product.category === selectedCategory);
+    ? staticProducts
+    : staticProducts.filter(product => product.category === selectedCategory);
 
   const openProductModal = (product: Product) => {
     setSelectedProduct(product);
@@ -60,20 +18,6 @@ function App() {
   const closeProductModal = () => {
     setSelectedProduct(null);
   };
-
-  if (showAdmin) {
-    return (
-      <>
-        <Admin />
-        <button
-          onClick={() => setShowAdmin(false)}
-          className="fixed bottom-8 right-8 bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition shadow-lg"
-        >
-          Back to Shop
-        </button>
-      </>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-indigo-900">
@@ -89,13 +33,6 @@ function App() {
             </div>
             <div className="hidden md:flex items-center space-x-6">
               <span className="text-gray-300">Hand-Painted Jute Bags</span>
-              <button
-                onClick={() => setShowAdmin(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white transition"
-                title="Admin Panel"
-              >
-                <Settings size={18} />
-              </button>
             </div>
           </div>
         </div>
