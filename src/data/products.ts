@@ -3,12 +3,16 @@ import { Product } from '../types';
 export const products: Product[] = [
   {
     id: '1',
-    name: 'Floral Paradise Jute Tote',
-    price: 49.99,
-    description: 'Hand-painted floral design on a sturdy jute tote bag. Perfect for everyday use with internal pockets and strong handles.',
+    name: 'Hand Painted Blue Jute Bag ',
+    price: 350,
+    description: 'Hand-painted floral design on a sturdy jute tote bag with an attached pocket. Perfect for everyday use with internal pockets and strong handles. Dimensions: Height: 12", Width: 14", Base: 6". Price inclusive of delivery.',
     images: [
-      'https://images.pexels.com/photos/5864245/pexels-photo-5864245.jpeg',
-      'https://images.pexels.com/photos/5864276/pexels-photo-5864276.jpeg'
+      'https://drive.google.com/file/d/1v7Va9SOS4auThxk8ak0590qT-E4UcFcC/view?usp=drive_link',
+      'https://drive.google.com/file/d/1Wk_lYA6JKCMOuHkYcdpIjFboxIVIxF-4/view?usp=drive_link',
+      'https://drive.google.com/file/d/11pfA-n_Rd5zPxHBkFvDiG12td_vi9-Bf/view?usp=drive_link',
+      'https://drive.google.com/file/d/1JSWnqpADci3LNpe6q1HweNLxe8okDn2n/view?usp=drive_link',
+      'https://drive.google.com/file/d/12UkbPJdt1-cv02-baJNahCEh1-kQxKos/view?usp=drive_link',
+      'https://drive.google.com/file/d/17xUS1bKakZOo1ebdnYwf2ssbnpaYaSzT/view?usp=drive_link'
     ],
     category: 'totes',
     featured: true,
@@ -17,12 +21,18 @@ export const products: Product[] = [
   },
   {
     id: '2',
-    name: 'Ocean Waves Shoulder Bag',
-    price: 59.99,
-    description: 'Serene ocean wave patterns hand-painted on a medium-sized jute shoulder bag. Water-resistant lining and adjustable strap.',
+    name: 'Hand Painted Foldable Tote Bag',
+    price: 350,
+    description: 'Serene floaral patterns hand-painted on a medium-sized jute tote bag.',
     images: [
-      'https://images.pexels.com/photos/5864235/pexels-photo-5864235.jpeg',
-      'https://images.pexels.com/photos/5864281/pexels-photo-5864281.jpeg'
+      'https://drive.google.com/file/d/1fhdK-aT3fMRm3A4jUZWz1NwAQN7IBA-D/view?usp=drive_link',
+      'https://drive.google.com/file/d/1VvswVV7nyjHaEWNwsmWHE7WI925Ds53k/view?usp=drive_link',
+      'https://drive.google.com/file/d/1q66VfOVuhHfKmLCpkpA3qw1Wa16H6iNh/view?usp=drive_link',
+      'https://drive.google.com/file/d/16ZGiHVgMa_w3y3zeOzOdyX7BFkuhnHbu/view?usp=drive_link',
+      'https://drive.google.com/file/d/1psT48s90184_9ijouaxt7xVIImDxAFLA/view?usp=drive_link',
+      'https://drive.google.com/file/d/1wtkkAPrAFaCFQfqdxABkHFMl7DZZ9mOh/view?usp=drive_link',
+      'https://drive.google.com/file/d/1SBbhnTl9qO2YhHTM_dYtiFVazD_Xi0Kk/view?usp=drive_link',
+      'https://drive.google.com/file/d/1rN2jMBc_i0sWBy9sZ6DWhl47WmDHi-Zc/view?usp=drive_link'
     ],
     category: 'shoulder',
     featured: true,
@@ -31,12 +41,16 @@ export const products: Product[] = [
   },
   {
     id: '3',
-    name: 'Abstract Art Clutch',
+    name: 'Jute File Folder',
     price: 39.99,
-    description: 'Bold abstract designs on a compact jute clutch. Includes a detachable wrist strap and magnetic closure.',
+    description: 'Bold abstract designs on a compact jute file folder.',
     images: [
-      'https://images.pexels.com/photos/4068314/pexels-photo-4068314.jpeg',
-      'https://images.pexels.com/photos/4068313/pexels-photo-4068313.jpeg'
+      'https://drive.google.com/file/d/1IgNTaHOHiwVPXFHblXHUgJ0B2tVcCFA5/view?usp=drive_link',
+      'https://drive.google.com/file/d/117dlFoULqNZ-RIKjpD5H-X7xQWCpYumK/view?usp=drive_link',
+      'https://drive.google.com/file/d/1XpEdx2h3db9xLjUXGtq6C2vz-3OA8gdR/view?usp=drive_link',
+      'https://drive.google.com/file/d/18GeFC2MGcMdzS7HOieVeA4a9uo9OgN1k/view?usp=drive_link',
+      'https://drive.google.com/file/d/1XoYv-xHHadKgo-ee5XAJjlFSLIfwPuii/view?usp=drive_link',
+      'https://drive.google.com/file/d/1qeBr2gUaWRWnpM_HkL8qukka_9cr3Muc/view?usp=drive_link'
     ],
     category: 'clutch',
     featured: false,
@@ -44,13 +58,15 @@ export const products: Product[] = [
     rating: 4.5
   },
   {
-    id: '4',
-    name: 'Botanical Garden Tote',
-    price: 54.99,
-    description: 'Lush botanical illustrations on a large capacity jute tote. Features reinforced bottom and premium cotton handles.',
+    id: '4'Jute Foldable Trays',
+    price: 400,
+    description: 'Foldable trays',
     images: [
-      'https://images.pexels.com/photos/5864249/pexels-photo-5864249.jpeg',
-      'https://images.pexels.com/photos/5864248/pexels-photo-5864248.jpeg'
+      'https://drive.google.com/file/d/1hUqGEvddIh_Cp1HuZISlSU4OaXg_0OY5/view?usp=drive_link',
+      'https://drive.google.com/file/d/14EYAljFcHzFoVEr26L8CkvktLAs5GQih/view?usp=drive_link',
+      'https://drive.google.com/file/d/1ZVFsULNdxGlguXLp5syYzb_JkZQ9nnkb/view?usp=drive_link',
+      'https://drive.google.com/file/d/19r6zm7YKCTwo-wWGZh6u7l-1vOQewoEn/view?usp=drive_link',
+      'https://drive.google.com/file/d/1SHrj8ebmZlaJZFPa71qr_dzK662x6H6U/view?usp=drive_link'
     ],
     category: 'totes',
     featured: true,
@@ -59,12 +75,15 @@ export const products: Product[] = [
   },
   {
     id: '5',
-    name: 'Geometric Patterns Messenger',
-    price: 64.99,
-    description: 'Modern geometric patterns on a versatile jute messenger bag. Includes padded laptop sleeve and multiple organization pockets.',
+    name: 'Kalamkari Hand Painted Shoulder Bag',
+    price: 350,
+    description: 'Kalamkari Hand Painted shoulder bag',
     images: [
-      'https://images.pexels.com/photos/5864243/pexels-photo-5864243.jpeg',
-      'https://images.pexels.com/photos/5864242/pexels-photo-5864242.jpeg'
+      'https://drive.google.com/file/d/11bqYdroah9Nd7KMXoSQtEWwHcWVZb7P_/view?usp=drive_link',
+      'https://drive.google.com/file/d/18RA24y1ZJJGgqZ_j5diTAWXObz8fTQgu/view?usp=drive_link',
+      'https://drive.google.com/file/d/1Jknxezumddyp_1YLWQEbNWob5ZgHo55h/view?usp=drive_link',
+      'https://drive.google.com/file/d/1YTVRTPrrzi_YvWw4fOA7VjsBL_ywBFyf/view?usp=drive_link',
+      'https://drive.google.com/file/d/1HVpy9chg5Vr6SLkVH5EvEciy-p_-SKCs/view?usp=drive_link'
     ],
     category: 'messenger',
     featured: false,
@@ -73,12 +92,15 @@ export const products: Product[] = [
   },
   {
     id: '6',
-    name: 'Sunset Dreams Mini Tote',
-    price: 44.99,
+    name: 'Multipurpose bag with zip',
+    price: 300,
     description: 'Vibrant sunset-inspired design on a compact jute tote. Perfect size for essentials with secure zip closure.',
     images: [
-      'https://images.pexels.com/photos/5864271/pexels-photo-5864271.jpeg',
-      'https://images.pexels.com/photos/5864270/pexels-photo-5864270.jpeg'
+      'https://drive.google.com/file/d/1E7V3J7YOgVajLdvBwQlUobxUFQukuUxl/view?usp=drive_link',
+      'https://drive.google.com/file/d/10sSRmupPF4K7j10kWm1zjNPzq4lKKi2f/view?usp=drive_link',
+      'https://drive.google.com/file/d/1MGgV7NYdavTcUO4f9hrUDsWJFihWLyx6/view?usp=drive_link',
+      'https://drive.google.com/file/d/1jEoY43vQyWFGmPvr0rAvKBhDeHnAf3HA/view?usp=drive_link',
+      'https://drive.google.com/file/d/1ItH5vy1IQmQgqhkmfwTgXUxgVtBZ_TgX/view?usp=drive_link'
     ],
     category: 'totes',
     featured: false,
