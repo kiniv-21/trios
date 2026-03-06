@@ -23,7 +23,7 @@ export const products: Product[] = [
     id: '2',
     name: 'Hand Painted Foldable Tote Bag',
     price: 350,
-    description: 'Serene floaral patterns hand-painted on a medium-sized jute tote bag.',
+    description: 'Serene floral patterns hand-painted on a medium-sized jute tote bag.',
     images: [
       'https://drive.google.com/file/d/1fhdK-aT3fMRm3A4jUZWz1NwAQN7IBA-D/view?usp=drive_link',
       'https://drive.google.com/file/d/1VvswVV7nyjHaEWNwsmWHE7WI925Ds53k/view?usp=drive_link',
