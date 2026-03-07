@@ -42,7 +42,7 @@ export const products: Product[] = [
   {
     id: '3',
     name: 'Jute File Folder',
-    price: 39.99,
+    price: 350,
     description: 'Bold abstract designs on a compact jute file folder.',
     images: [
       'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Jute%20File%20Folder/Cover.png',
