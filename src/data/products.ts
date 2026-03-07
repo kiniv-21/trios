@@ -7,12 +7,12 @@ export const products: Product[] = [
     price: 350,
     description: 'Hand-painted floral design on a sturdy jute tote bag with an attached pocket. Perfect for everyday use with internal pockets and strong handles. Dimensions: Height: 12", Width: 14", Base: 6". Price inclusive of delivery.',
     images: [
-      'https://drive.google.com/uc?export=view&id=1v7Va9SOS4auThxk8ak0590qT-E4UcFcC',
-      'https://drive.google.com/uc?export=view&id=1Wk_lYA6JKCMOuHkYcdpIjFboxIVIxF-4',
-      'https://drive.google.com/uc?export=view&id=11pfA-n_Rd5zPxHBkFvDiG12td_vi9-Bf',
-      'https://drive.google.com/uc?export=view&id=1JSWnqpADci3LNpe6q1HweNLxe8okDn2n',
-      'https://drive.google.com/uc?export=view&id=12UkbPJdt1-cv02-baJNahCEh1-kQxKos',
-      'https://drive.google.com/uc?export=view&id=17xUS1bKakZOo1ebdnYwf2ssbnpaYaSzT'
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Blue%20Jute%20hand%20painted%20bag/Cover.png',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Blue%20Jute%20hand%20painted%20bag/Front.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Blue%20Jute%20hand%20painted%20bag/Inside.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Blue%20Jute%20hand%20painted%20bag/Type%202.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Blue%20Jute%20hand%20painted%20bag/Type%203.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Blue%20Jute%20hand%20painted%20bag/Type%204.jpeg'
     ],
     category: 'totes',
     featured: true,
@@ -25,14 +25,14 @@ export const products: Product[] = [
     price: 350,
     description: 'Serene floral patterns hand-painted on a medium-sized jute tote bag.',
     images: [
-      'https://drive.google.com/uc?export=view&id=1fhdK-aT3fMRm3A4jUZWz1NwAQN7IBA-D',
-      'https://drive.google.com/uc?export=view&id=1VvswVV7nyjHaEWNwsmWHE7WI925Ds53k',
-      'https://drive.google.com/uc?export=view&id=1q66VfOVuhHfKmLCpkpA3qw1Wa16H6iNh',
-      'https://drive.google.com/uc?export=view&id=16ZGiHVgMa_w3y3zeOzOdyX7BFkuhnHbu',
-      'https://drive.google.com/uc?export=view&id=1psT48s90184_9ijouaxt7xVIImDxAFLA',
-      'https://drive.google.com/uc?export=view&id=1wtkkAPrAFaCFQfqdxABkHFMl7DZZ9mOh',
-      'https://drive.google.com/uc?export=view&id=1SBbhnTl9qO2YhHTM_dYtiFVazD_Xi0Kk',
-      'https://drive.google.com/uc?export=view&id=1rN2jMBc_i0sWBy9sZ6DWhl47WmDHi-Zc'
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Hand%20painted%20foldable%20tote%20bag/Cover.png',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Hand%20painted%20foldable%20tote%20bag/Fully%20open%202.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Hand%20painted%20foldable%20tote%20bag/Fully%20open.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Hand%20painted%20foldable%20tote%20bag/Shrunk%20but%20open%20type%202.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Hand%20painted%20foldable%20tote%20bag/Shrunk%20but%20open.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Hand%20painted%20foldable%20tote%20bag/Type%202.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Hand%20painted%20foldable%20tote%20bag/Type%203.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Hand%20painted%20foldable%20tote%20bag/Type%204.jpeg'
     ],
     category: 'shoulder',
     featured: true,
@@ -45,12 +45,12 @@ export const products: Product[] = [
     price: 39.99,
     description: 'Bold abstract designs on a compact jute file folder.',
     images: [
-      'https://drive.google.com/uc?export=view&id=1IgNTaHOHiwVPXFHblXHUgJ0B2tVcCFA5',
-      'https://drive.google.com/uc?export=view&id=117dlFoULqNZ-RIKjpD5H-X7xQWCpYumK',
-      'https://drive.google.com/uc?export=view&id=1XpEdx2h3db9xLjUXGtq6C2vz-3OA8gdR',
-      'https://drive.google.com/uc?export=view&id=18GeFC2MGcMdzS7HOieVeA4a9uo9OgN1k',
-      'https://drive.google.com/uc?export=view&id=1XoYv-xHHadKgo-ee5XAJjlFSLIfwPuii',
-      'https://drive.google.com/uc?export=view&id=1qeBr2gUaWRWnpM_HkL8qukka_9cr3Muc'
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Jute%20File%20Folder/Cover.png',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Jute%20File%20Folder/File%20Folder%20Inside%20Open.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Jute%20File%20Folder/Type%201%20open.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Jute%20File%20Folder/Type%201.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Jute%20File%20Folder/Type%202.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Jute%20File%20Folder/Type%203%20Closed.jpeg'
     ],
     category: 'clutch',
     featured: false,
@@ -63,11 +63,11 @@ export const products: Product[] = [
     price: 400,
     description: 'Foldable trays',
     images: [
-      'https://drive.google.com/uc?export=view&id=1hUqGEvddIh_Cp1HuZISlSU4OaXg_0OY5',
-      'https://drive.google.com/uc?export=view&id=14EYAljFcHzFoVEr26L8CkvktLAs5GQih',
-      'https://drive.google.com/uc?export=view&id=1ZVFsULNdxGlguXLp5syYzb_JkZQ9nnkb',
-      'https://drive.google.com/uc?export=view&id=19r6zm7YKCTwo-wWGZh6u7l-1vOQewoEn',
-      'https://drive.google.com/uc?export=view&id=1SHrj8ebmZlaJZFPa71qr_dzK662x6H6U'
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Jute%20Foldable%20Trays/Cover%20photo.png',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Jute%20Foldable%20Trays/Type%202%20as%20tray.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Jute%20Foldable%20Trays/Type%202.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Jute%20Foldable%20Trays/Type%203%20as%20Tray.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Jute%20Foldable%20Trays/Type%203%20open.jpeg'
     ],
     category: 'totes',
     featured: true,
@@ -80,11 +80,11 @@ export const products: Product[] = [
     price: 350,
     description: 'Kalamkari Hand Painted shoulder bag',
     images: [
-      'https://drive.google.com/uc?export=view&id=11bqYdroah9Nd7KMXoSQtEWwHcWVZb7P_',
-      'https://drive.google.com/uc?export=view&id=18RA24y1ZJJGgqZ_j5diTAWXObz8fTQgu',
-      'https://drive.google.com/uc?export=view&id=1Jknxezumddyp_1YLWQEbNWob5ZgHo55h',
-      'https://drive.google.com/uc?export=view&id=1YTVRTPrrzi_YvWw4fOA7VjsBL_ywBFyf',
-      'https://drive.google.com/uc?export=view&id=1HVpy9chg5Vr6SLkVH5EvEciy-p_-SKCs'
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Kalamkari%20Hand%20Painted%20sling%20bag/cover.png',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Kalamkari%20Hand%20Painted%20sling%20bag/Type%201.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Kalamkari%20Hand%20Painted%20sling%20bag/Type%202.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Kalamkari%20Hand%20Painted%20sling%20bag/Type%203.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Kalamkari%20Hand%20Painted%20sling%20bag/Type%204.jpeg'
     ],
     category: 'messenger',
     featured: false,
@@ -97,11 +97,11 @@ export const products: Product[] = [
     price: 300,
     description: 'Vibrant sunset-inspired design on a compact jute tote. Perfect size for essentials with secure zip closure.',
     images: [
-      'https://drive.google.com/uc?export=view&id=1E7V3J7YOgVajLdvBwQlUobxUFQukuUxl',
-      'https://drive.google.com/uc?export=view&id=10sSRmupPF4K7j10kWm1zjNPzq4lKKi2f',
-      'https://drive.google.com/uc?export=view&id=1MGgV7NYdavTcUO4f9hrUDsWJFihWLyx6',
-      'https://drive.google.com/uc?export=view&id=1jEoY43vQyWFGmPvr0rAvKBhDeHnAf3HA',
-      'https://drive.google.com/uc?export=view&id=1ItH5vy1IQmQgqhkmfwTgXUxgVtBZ_TgX'
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Multipurpose%20bag%20with%20zip/Cover.png',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Multipurpose%20bag%20with%20zip/Type%201.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Multipurpose%20bag%20with%20zip/Type%202.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Multipurpose%20bag%20with%20zip/Type%203.jpeg',
+      'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Multipurpose%20bag%20with%20zip/Type%204.jpeg'
     ],
     category: 'totes',
     featured: false,

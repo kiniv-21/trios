@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Heart, Star, Palette, Mail, Phone, MapPin, Facebook, Instagram, Twitter } from 'lucide-react';
 import { categories, products as staticProducts } from './data/products';
 import { Product } from './types';
@@ -6,6 +6,7 @@ import { Product } from './types';
 function App() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const filteredProducts = selectedCategory === 'all'
     ? staticProducts
@@ -13,10 +14,12 @@ function App() {
 
   const openProductModal = (product: Product) => {
     setSelectedProduct(product);
+    setSelectedImageIndex(0);
   };
 
   const closeProductModal = () => {
     setSelectedProduct(null);
+    setSelectedImageIndex(0);
   };
 
   return (
@@ -32,7 +35,7 @@ function App() {
               </span>
             </div>
             <div className="hidden md:flex items-center space-x-6">
-              <span className="text-gray-300">Hand-Painted Jute Bags</span>
+              {/* <span className="text-gray-300">Hand-Painted Jute Bags</span> */}
             </div>
           </div>
         </div>
@@ -140,7 +143,7 @@ function App() {
                   </p>
                   
                   <div className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-white">${product.price.toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-white">₹{product.price.toFixed(2)}</span>
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                       product.inStock 
                         ? 'bg-green-900 text-green-300' 
@@ -237,7 +240,7 @@ function App() {
                   <Phone className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-semibold text-white mb-2">Phone</h3>
-                <p className="text-gray-300">(555) 123-4567</p>
+                <p className="text-gray-300">+91 98454 98171</p>
               </div>
               
               <div className="flex flex-col items-center">
@@ -245,7 +248,7 @@ function App() {
                   <MapPin className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-semibold text-white mb-2">Location</h3>
-                <p className="text-gray-300">Craft District, CA</p>
+                <p className="text-gray-300">Bengaluru, Karnataka, India</p>
               </div>
             </div>
           </div>
@@ -306,20 +309,27 @@ function App() {
                 <div className="space-y-4">
                   <div className="h-96 rounded-lg overflow-hidden bg-gray-700">
                     <img 
-                      src={selectedProduct.images[0]} 
+                      src={selectedProduct.images[selectedImageIndex] || selectedProduct.images[0]} 
                       alt={selectedProduct.name} 
                       className="w-full h-full object-contain"
                     />
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     {selectedProduct.images.map((image, index) => (
-                      <div key={index} className="h-20 rounded-md overflow-hidden bg-gray-700">
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => setSelectedImageIndex(index)}
+                        className={`h-20 rounded-md overflow-hidden bg-gray-700 border-2 transition-colors ${
+                          selectedImageIndex === index ? 'border-indigo-500' : 'border-transparent hover:border-gray-500'
+                        }`}
+                      >
                         <img 
                           src={image} 
                           alt={`${selectedProduct.name} ${index + 1}`} 
                           className="w-full h-full object-cover"
                         />
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -350,7 +360,7 @@ function App() {
                     </div>
                   </div>
 
-                  <p className="text-3xl font-bold text-white">${selectedProduct.price.toFixed(2)}</p>
+                  <p className="text-3xl font-bold text-white">₹{selectedProduct.price.toFixed(2)}</p>
 
                   <div className="border-t border-gray-700 pt-6">
                     <p className="text-gray-300">{selectedProduct.description}</p>
