@@ -53,6 +53,7 @@ export function Admin() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [passcodeInput, setPasscodeInput] = useState('');
   const [authMessage, setAuthMessage] = useState('');
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [products, setProducts] = useState<AdminProduct[]>(staticProducts);
   const [form, setForm] = useState<NewProductForm>(initialForm);
   const [message, setMessage] = useState('');
@@ -343,22 +344,50 @@ export function Admin() {
     );
   };
 
-  const handleUnlock = (e: React.FormEvent) => {
+  const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!adminPasscode) {
-      setAuthMessage('Admin is disabled. Configure VITE_ADMIN_PASSCODE in environment.');
+    const trimmedPasscode = passcodeInput.trim();
+    if (!trimmedPasscode) {
+      setAuthMessage('Enter passcode.');
       return;
     }
 
-    if (passcodeInput === adminPasscode) {
-      setIsUnlocked(true);
-      setAuthMessage('');
-      setPasscodeInput('');
-      return;
-    }
+    setIsAuthenticating(true);
+    setAuthMessage('');
 
-    setAuthMessage('Invalid passcode.');
+    try {
+      if (supabase) {
+        const { data, error } = await supabase.rpc('verify_admin_passcode', {
+          input_passcode: trimmedPasscode,
+        });
+
+        if (error) {
+          setAuthMessage(`Auth check failed: ${error.message}`);
+          return;
+        }
+
+        if (data === true) {
+          setIsUnlocked(true);
+          setPasscodeInput('');
+          return;
+        }
+
+        setAuthMessage('Invalid passcode.');
+        return;
+      }
+
+      // Fallback for local dev when Supabase is not configured.
+      if (adminPasscode && trimmedPasscode === adminPasscode) {
+        setIsUnlocked(true);
+        setPasscodeInput('');
+        return;
+      }
+
+      setAuthMessage('Supabase auth is not configured.');
+    } finally {
+      setIsAuthenticating(false);
+    }
   };
 
   if (!isUnlocked) {
@@ -379,9 +408,10 @@ export function Admin() {
             {authMessage && <p className="text-sm text-red-700 bg-red-50 p-2 rounded">{authMessage}</p>}
             <button
               type="submit"
+              disabled={isAuthenticating}
               className="w-full bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
             >
-              Unlock Admin
+              {isAuthenticating ? 'Checking...' : 'Unlock Admin'}
             </button>
           </form>
         </div>
