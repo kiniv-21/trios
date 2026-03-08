@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { products as staticProducts } from '../data/products';
 import { Product } from '../types';
@@ -29,6 +29,28 @@ const supabase = supabaseUrl && supabaseAnonKey
 const toFolderName = (name: string) => name.trim().replace(/\s+/g, ' ');
 const publicImagePrefix = '/storage/v1/object/public/product-images/';
 
+interface ProductRow {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  images: string[] | null;
+  category: string;
+  featured: boolean;
+  in_stock: boolean;
+}
+
+const mapProductRow = (row: ProductRow): AdminProduct => ({
+  id: row.id,
+  name: row.name,
+  price: Number(row.price || 0),
+  description: row.description,
+  images: Array.isArray(row.images) ? row.images : [],
+  category: row.category,
+  featured: Boolean(row.featured),
+  inStock: Boolean(row.in_stock),
+});
+
 const getStoragePathFromPublicUrl = (url: string) => {
   const markerIndex = url.indexOf(publicImagePrefix);
   if (markerIndex === -1) return null;
@@ -54,7 +76,8 @@ export function Admin() {
   const [passcodeInput, setPasscodeInput] = useState('');
   const [authMessage, setAuthMessage] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const [products, setProducts] = useState<AdminProduct[]>(staticProducts);
+  const [products, setProducts] = useState<AdminProduct[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [form, setForm] = useState<NewProductForm>(initialForm);
   const [message, setMessage] = useState('');
   const [folderImageUrls, setFolderImageUrls] = useState<string[]>([]);
@@ -67,10 +90,38 @@ export function Admin() {
   const newProductFolder = toFolderName(form.name);
 
   const sortedProducts = useMemo(() => {
-    return [...products].sort((a, b) => Number(a.id) - Number(b.id));
+    return [...products].sort((a, b) => a.name.localeCompare(b.name));
   }, [products]);
 
-  const handleAddProduct = (e: React.FormEvent) => {
+  useEffect(() => {
+    const loadProducts = async () => {
+      if (!supabase) {
+        setProducts(staticProducts);
+        return;
+      }
+
+      setIsLoadingProducts(true);
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, price, description, images, category, featured, in_stock')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        setMessage(`Failed to load products: ${error.message}`);
+        setProducts(staticProducts);
+      } else {
+        setProducts(((data || []) as ProductRow[]).map(mapProductRow));
+      }
+
+      setIsLoadingProducts(false);
+    };
+
+    if (isUnlocked) {
+      loadProducts();
+    }
+  }, [isUnlocked]);
+
+  const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!form.name.trim() || !form.description.trim() || form.images.length === 0) {
@@ -78,23 +129,39 @@ export function Admin() {
       return;
     }
 
-    const nextId = (Math.max(0, ...products.map((p) => Number(p.id) || 0)) + 1).toString();
+    if (!supabase) {
+      setMessage('Supabase is not configured.');
+      return;
+    }
 
-    const newProduct: AdminProduct = {
-      id: nextId,
+    const payload = {
       name: form.name.trim(),
       description: form.description.trim(),
-      inStock: form.inStock,
+      in_stock: form.inStock,
       price: 0,
       images: form.images,
       category: 'totes',
       featured: false,
     };
 
-    setProducts((prev) => [...prev, newProduct]);
+    const { data, error } = await supabase
+      .from('products')
+      .insert(payload)
+      .select('id, name, price, description, images, category, featured, in_stock')
+      .single();
+
+    if (error) {
+      setMessage(`Failed to add product: ${error.message}`);
+      return;
+    }
+
+    if (data) {
+      setProducts((prev) => [...prev, mapProductRow(data as ProductRow)]);
+    }
+
     setForm(initialForm);
     setFolderImageUrls([]);
-    setMessage('Product added in admin view with selected Supabase images.');
+    setMessage('Product saved to Supabase.');
   };
 
   const handleUploadImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -205,6 +272,19 @@ export function Admin() {
     );
   };
 
+  const persistProductImages = async (productId: string, nextImages: string[]) => {
+    if (!supabase) return;
+
+    const { error } = await supabase
+      .from('products')
+      .update({ images: nextImages })
+      .eq('id', productId);
+
+    if (error) {
+      setMessage(`Failed to save product images: ${error.message}`);
+    }
+  };
+
   const handleLoadExistingFolderImages = async (product: AdminProduct) => {
     if (!supabase) {
       setMessage('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
@@ -285,7 +365,9 @@ export function Admin() {
           ...prev,
           [product.id]: Array.from(new Set([...(prev[product.id] || []), ...uploadedUrls])),
         }));
-        updateProductImages(product.id, Array.from(new Set([...product.images, ...uploadedUrls])));
+        const nextImages = Array.from(new Set([...product.images, ...uploadedUrls]));
+        updateProductImages(product.id, nextImages);
+        await persistProductImages(product.id, nextImages);
       }
     } finally {
       setExistingUploading((prev) => ({ ...prev, [product.id]: false }));
@@ -300,6 +382,7 @@ export function Admin() {
       : [...product.images, imageUrl];
 
     updateProductImages(product.id, nextImages);
+    persistProductImages(product.id, nextImages);
   };
 
   const moveProductImage = (product: AdminProduct, index: number, direction: 'up' | 'down') => {
@@ -309,6 +392,7 @@ export function Admin() {
     const nextImages = [...product.images];
     [nextImages[index], nextImages[swapWith]] = [nextImages[swapWith], nextImages[index]];
     updateProductImages(product.id, nextImages);
+    persistProductImages(product.id, nextImages);
   };
 
   const handleDeleteExistingProductImage = async (product: AdminProduct, imageUrl: string) => {
@@ -325,14 +409,16 @@ export function Admin() {
       return;
     }
 
-    updateProductImages(product.id, product.images.filter((img) => img !== imageUrl));
+    const nextImages = product.images.filter((img) => img !== imageUrl);
+    updateProductImages(product.id, nextImages);
+    await persistProductImages(product.id, nextImages);
     setExistingFolderImages((prev) => ({
       ...prev,
       [product.id]: (prev[product.id] || []).filter((img) => img !== imageUrl),
     }));
   };
 
-  const updateProductField = (id: string, field: 'name' | 'description' | 'inStock', value: string | boolean) => {
+  const updateProductField = async (id: string, field: 'name' | 'description' | 'inStock', value: string | boolean) => {
     setProducts((prev) =>
       prev.map((product) => {
         if (product.id !== id) return product;
@@ -342,6 +428,20 @@ export function Admin() {
         };
       })
     );
+
+    if (!supabase) return;
+
+    const payload =
+      field === 'inStock'
+        ? { in_stock: Boolean(value) }
+        : field === 'description'
+          ? { description: String(value) }
+          : { name: String(value) };
+
+    const { error } = await supabase.from('products').update(payload).eq('id', id);
+    if (error) {
+      setMessage(`Failed to save change: ${error.message}`);
+    }
   };
 
   const handleUnlock = async (e: React.FormEvent) => {
@@ -560,6 +660,7 @@ export function Admin() {
 
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">All Products</h2>
+          {isLoadingProducts && <p className="text-sm text-gray-500 mb-4">Loading products from Supabase...</p>}
           <div className="space-y-4">
             {sortedProducts.map((product) => (
               <div key={product.id} className="border border-gray-200 rounded p-4">

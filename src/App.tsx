@@ -1,16 +1,68 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Heart, Palette, Mail, Phone, MapPin, Facebook, Instagram, Twitter } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
 import { categories, products as staticProducts } from './data/products';
 import { Product } from './types';
 
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = supabaseUrl && supabaseAnonKey
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
+
+interface ProductRow {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  images: string[] | null;
+  category: string;
+  featured: boolean;
+  in_stock: boolean;
+}
+
+const mapProductRow = (row: ProductRow): Product => ({
+  id: row.id,
+  name: row.name,
+  price: Number(row.price || 0),
+  description: row.description,
+  images: Array.isArray(row.images) ? row.images : [],
+  category: row.category,
+  featured: Boolean(row.featured),
+  inStock: Boolean(row.in_stock),
+});
+
 function App() {
+  const [products, setProducts] = useState<Product[]>(staticProducts);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
+  useEffect(() => {
+    const loadProducts = async () => {
+      if (!supabase) return;
+
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, price, description, images, category, featured, in_stock')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Failed to load products from Supabase:', error.message);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setProducts((data as ProductRow[]).map(mapProductRow));
+      }
+    };
+
+    loadProducts();
+  }, []);
+
   const filteredProducts = selectedCategory === 'all'
-    ? staticProducts
-    : staticProducts.filter(product => product.category === selectedCategory);
+    ? products
+    : products.filter(product => product.category === selectedCategory);
 
   const openProductModal = (product: Product) => {
     setSelectedProduct(product);
