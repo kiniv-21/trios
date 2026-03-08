@@ -195,11 +195,11 @@ function App() {
             <div className="relative">
               <div className="absolute -top-4 -left-4 w-24 h-24 bg-indigo-600 rounded-full opacity-20"></div>
               <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-purple-600 rounded-full opacity-20"></div>
-              <img 
+              {/* <img 
                 src="https://images.pexels.com/photos/5864292/pexels-photo-5864292.jpeg" 
                 alt="Sustainable practices" 
                 className="rounded-lg shadow-xl relative z-10 w-full h-auto"
-              />
+              /> */}
             </div>
           </div>
         </div>
