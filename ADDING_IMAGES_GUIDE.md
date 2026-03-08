@@ -46,8 +46,7 @@ Open `src/data/products.ts` and update the image URLs for each product:
   ],
   category: 'totes',
   featured: true,
-  inStock: true,
-  rating: 4.8
+  inStock: true
 }
 ```
 
@@ -68,8 +67,7 @@ To add a new product, add a new object to the `products` array in `src/data/prod
   ],
   category: 'totes',  // Options: 'totes', 'shoulder', 'clutch', 'messenger'
   featured: false,
-  inStock: true,
-  rating: 4.5
+  inStock: true
 }
 ```
 
@@ -103,8 +101,7 @@ To add a new product, add a new object to the `products` array in `src/data/prod
   ],
   category: 'totes',
   featured: true,
-  inStock: true,
-  rating: 4.8
+  inStock: true
 }
 ```
 

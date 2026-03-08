@@ -16,8 +16,7 @@ export const products: Product[] = [
     ],
     category: 'totes',
     featured: true,
-    inStock: true,
-    rating: 4.8
+    inStock: true
   },
   {
     id: '2',
@@ -36,8 +35,7 @@ export const products: Product[] = [
     ],
     category: 'shoulder',
     featured: true,
-    inStock: true,
-    rating: 4.7
+    inStock: true
   },
   {
     id: '3',
@@ -54,8 +52,7 @@ export const products: Product[] = [
     ],
     category: 'clutch',
     featured: false,
-    inStock: true,
-    rating: 4.5
+    inStock: true
   },
   {
     id: '4',
@@ -71,8 +68,7 @@ export const products: Product[] = [
     ],
     category: 'totes',
     featured: true,
-    inStock: true,
-    rating: 4.9
+    inStock: true
   },
   {
     id: '5',
@@ -88,8 +84,7 @@ export const products: Product[] = [
     ],
     category: 'messenger',
     featured: false,
-    inStock: true,
-    rating: 4.6
+    inStock: true
   },
   {
     id: '6',
@@ -105,8 +100,7 @@ export const products: Product[] = [
     ],
     category: 'totes',
     featured: false,
-    inStock: true,
-    rating: 4.7
+    inStock: true
   }
 ];
 

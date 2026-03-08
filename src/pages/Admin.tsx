@@ -14,7 +14,6 @@ interface ProductForm {
   category: string;
   featured: boolean;
   in_stock: boolean;
-  rating: string;
   images: File[];
 }
 
@@ -26,7 +25,6 @@ export function Admin() {
     category: 'totes',
     featured: false,
     in_stock: true,
-    rating: '0',
     images: []
   });
 
@@ -106,7 +104,6 @@ export function Admin() {
           category: form.category,
           featured: form.featured,
           in_stock: form.in_stock,
-          rating: parseFloat(form.rating),
           images: uploadedUrls
         });
 
@@ -121,7 +118,6 @@ export function Admin() {
           category: 'totes',
           featured: false,
           in_stock: true,
-          rating: '0',
           images: []
         });
         setImageUrls([]);
@@ -186,7 +182,7 @@ export function Admin() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Category
@@ -200,21 +196,6 @@ export function Admin() {
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Rating
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  value={form.rating}
-                  onChange={(e) => setForm(prev => ({ ...prev, rating: e.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                />
               </div>
             </div>
 

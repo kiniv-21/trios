@@ -11,7 +11,6 @@
       - `category` (text, product category)
       - `featured` (boolean, whether product is featured)
       - `in_stock` (boolean, stock status)
-      - `rating` (decimal, product rating)
       - `created_at` (timestamp)
       - `updated_at` (timestamp)
 
@@ -29,7 +28,6 @@ CREATE TABLE IF NOT EXISTS products (
   category text NOT NULL,
   featured boolean DEFAULT false,
   in_stock boolean DEFAULT true,
-  rating decimal(3, 1) DEFAULT 0,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, Star, Palette, Mail, Phone, MapPin, Facebook, Instagram, Twitter } from 'lucide-react';
+import { Heart, Palette, Mail, Phone, MapPin, Facebook, Instagram, Twitter } from 'lucide-react';
 import { categories, products as staticProducts } from './data/products';
 import { Product } from './types';
 
@@ -125,18 +125,6 @@ function App() {
                   <h3 className="text-xl font-semibold text-white group-hover:text-indigo-300 transition-colors duration-200 mb-2">
                     {product.name}
                   </h3>
-                  
-                  <div className="flex items-center mb-3">
-                    <div className="flex">
-                      {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i} 
-                          className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500'}`} 
-                        />
-                      ))}
-                    </div>
-                    <span className="text-sm text-gray-400 ml-2">({product.rating})</span>
-                  </div>
                   
                   <p className="text-gray-300 text-sm mb-4 line-clamp-2">
                     {product.description}
@@ -347,17 +335,6 @@ function App() {
                       )}
                     </div>
                     
-                    <div className="flex items-center mb-4">
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <Star 
-                            key={i} 
-                            className={`w-5 h-5 ${i < Math.floor(selectedProduct.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500'}`} 
-                          />
-                        ))}
-                      </div>
-                      <span className="text-gray-400 ml-2">({selectedProduct.rating})</span>
-                    </div>
                   </div>
 
                   <p className="text-3xl font-bold text-white">₹{selectedProduct.price.toFixed(2)}</p>

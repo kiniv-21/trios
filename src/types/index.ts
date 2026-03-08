@@ -7,7 +7,6 @@ export interface Product {
   category: string;
   featured: boolean;
   inStock: boolean;
-  rating: number;
 }
 
 export interface CartItem {
