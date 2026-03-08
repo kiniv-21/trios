@@ -384,7 +384,7 @@ export function Admin() {
         return;
       }
 
-      setAuthMessage('Supabase auth is not configured.');
+      setAuthMessage('Supabase auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
     } finally {
       setIsAuthenticating(false);
     }
