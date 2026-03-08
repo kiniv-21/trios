@@ -34,9 +34,7 @@ function App() {
                 Trios Art
               </span>
             </div>
-            <div className="hidden md:flex items-center space-x-6">
-              {/* <span className="text-gray-300">Hand-Painted Jute Bags</span> */}
-            </div>
+            <div className="hidden md:flex items-center space-x-6"></div>
           </div>
         </div>
       </header>
