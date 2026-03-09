@@ -40,6 +40,12 @@ interface ProductRow {
   in_stock: boolean;
 }
 
+interface ProductEditDraft {
+  name: string;
+  description: string;
+  inStock: boolean;
+}
+
 const mapProductRow = (row: ProductRow): AdminProduct => ({
   id: row.id,
   name: row.name,
@@ -86,6 +92,7 @@ export function Admin() {
   const [existingFolderImages, setExistingFolderImages] = useState<Record<string, string[]>>({});
   const [existingLoading, setExistingLoading] = useState<Record<string, boolean>>({});
   const [existingUploading, setExistingUploading] = useState<Record<string, boolean>>({});
+  const [productEdits, setProductEdits] = useState<Record<string, ProductEditDraft>>({});
 
   const newProductFolder = toFolderName(form.name);
 
@@ -120,6 +127,20 @@ export function Admin() {
       loadProducts();
     }
   }, [isUnlocked]);
+
+  useEffect(() => {
+    setProductEdits((prev) => {
+      const next: Record<string, ProductEditDraft> = {};
+      for (const product of products) {
+        next[product.id] = prev[product.id] || {
+          name: product.name,
+          description: product.description,
+          inStock: product.inStock,
+        };
+      }
+      return next;
+    });
+  }, [products]);
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -418,30 +439,77 @@ export function Admin() {
     }));
   };
 
-  const updateProductField = async (id: string, field: 'name' | 'description' | 'inStock', value: string | boolean) => {
-    setProducts((prev) =>
-      prev.map((product) => {
-        if (product.id !== id) return product;
-        return {
-          ...product,
+  const updateProductField = (id: string, field: 'name' | 'description' | 'inStock', value: string | boolean) => {
+    setProductEdits((prev) => {
+      const current = prev[id] || { name: '', description: '', inStock: true };
+      return {
+        ...prev,
+        [id]: {
+          ...current,
           [field]: value,
-        };
-      })
+        },
+      };
+    });
+  };
+
+  const hasProductEditChanges = (product: AdminProduct) => {
+    const draft = productEdits[product.id];
+    if (!draft) return false;
+    return (
+      draft.name !== product.name
+      || draft.description !== product.description
+      || draft.inStock !== product.inStock
     );
+  };
 
-    if (!supabase) return;
+  const handleDoneExistingProduct = async (product: AdminProduct) => {
+    const draft = productEdits[product.id];
+    if (!draft) return;
 
-    const payload =
-      field === 'inStock'
-        ? { in_stock: Boolean(value) }
-        : field === 'description'
-          ? { description: String(value) }
-          : { name: String(value) };
+    const trimmedName = draft.name.trim();
+    const trimmedDescription = draft.description.trim();
+    if (!trimmedName || !trimmedDescription) {
+      setMessage('Existing product title and description cannot be empty.');
+      return;
+    }
 
-    const { error } = await supabase.from('products').update(payload).eq('id', id);
+    const nextProduct = {
+      ...product,
+      name: trimmedName,
+      description: trimmedDescription,
+      inStock: draft.inStock,
+    };
+
+    setProducts((prev) => prev.map((p) => (p.id === product.id ? nextProduct : p)));
+    setProductEdits((prev) => ({
+      ...prev,
+      [product.id]: {
+        name: trimmedName,
+        description: trimmedDescription,
+        inStock: draft.inStock,
+      },
+    }));
+
+    if (!supabase) {
+      setMessage(`Saved local changes for ${trimmedName}.`);
+      return;
+    }
+
+    const { error } = await supabase
+      .from('products')
+      .update({
+        name: trimmedName,
+        description: trimmedDescription,
+        in_stock: draft.inStock,
+      })
+      .eq('id', product.id);
+
     if (error) {
       setMessage(`Failed to save change: ${error.message}`);
+      return;
     }
+
+    setMessage(`Saved changes for ${trimmedName}.`);
   };
 
   const handleUnlock = async (e: React.FormEvent) => {
@@ -490,6 +558,14 @@ export function Admin() {
     }
   };
 
+  const handleLogout = () => {
+    setIsUnlocked(false);
+    setPasscodeInput('');
+    setMessage('');
+    setAuthMessage('Logged out successfully.');
+    setProductEdits({});
+  };
+
   if (!isUnlocked) {
     return (
       <div className="min-h-screen bg-gray-100 py-10 px-4 sm:px-6 lg:px-8">
@@ -523,8 +599,20 @@ export function Admin() {
     <div className="min-h-screen bg-gray-100 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="bg-white rounded-lg shadow p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Admin - Product Management</h1>
-          <p className="text-sm text-gray-600">Add products and edit title, description, and stock status for all products.</p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Admin - Product Management</h1>
+              <p className="text-sm text-gray-600">Add products and edit title, description, and stock status for all products.</p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-50 transition"
+            >
+              Log out
+            </button>
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
@@ -652,7 +740,7 @@ export function Admin() {
                 type="submit"
                 className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
               >
-                Add Product
+                Done
               </button>
             </div>
           </form>
@@ -665,10 +753,18 @@ export function Admin() {
             {sortedProducts.map((product) => (
               <div key={product.id} className="border border-gray-200 rounded p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {hasProductEditChanges(product) && (
+                    <div className="md:col-span-2">
+                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+                        You have unsaved title/description/stock changes for this product.
+                      </p>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">Title</label>
                     <input
-                      value={product.name}
+                      value={productEdits[product.id]?.name ?? product.name}
                       onChange={(e) => updateProductField(product.id, 'name', e.target.value)}
                       className="w-full border border-gray-300 rounded px-3 py-2"
                     />
@@ -678,7 +774,7 @@ export function Admin() {
                     <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
                       <input
                         type="checkbox"
-                        checked={product.inStock}
+                        checked={productEdits[product.id]?.inStock ?? product.inStock}
                         onChange={(e) => updateProductField(product.id, 'inStock', e.target.checked)}
                         className="h-4 w-4"
                       />
@@ -689,11 +785,22 @@ export function Admin() {
                   <div className="md:col-span-2">
                     <label className="block text-xs font-semibold text-gray-600 mb-1">Description</label>
                     <textarea
-                      value={product.description}
+                      value={productEdits[product.id]?.description ?? product.description}
                       onChange={(e) => updateProductField(product.id, 'description', e.target.value)}
                       rows={3}
                       className="w-full border border-gray-300 rounded px-3 py-2"
                     />
+                  </div>
+
+                  <div className="md:col-span-2 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => handleDoneExistingProduct(product)}
+                      disabled={!hasProductEditChanges(product)}
+                      className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Done
+                    </button>
                   </div>
 
                   <div className="md:col-span-2">
