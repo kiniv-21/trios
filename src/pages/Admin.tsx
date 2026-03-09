@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type Session } from '@supabase/supabase-js';
 import { products as staticProducts } from '../data/products';
 import { Product } from '../types';
 
@@ -8,6 +8,7 @@ type AdminProduct = Product;
 interface NewProductForm {
   name: string;
   description: string;
+  price: string;
   inStock: boolean;
   images: string[];
 }
@@ -15,11 +16,11 @@ interface NewProductForm {
 const initialForm: NewProductForm = {
   name: '',
   description: '',
+  price: '',
   inStock: true,
   images: [],
 };
 
-const adminPasscode = import.meta.env.VITE_ADMIN_PASSCODE;
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = supabaseUrl && supabaseAnonKey
@@ -43,6 +44,7 @@ interface ProductRow {
 interface ProductEditDraft {
   name: string;
   description: string;
+  price: string;
   inStock: boolean;
 }
 
@@ -79,9 +81,11 @@ const getProductFolder = (product: Product) => {
 
 export function Admin() {
   const [isUnlocked, setIsUnlocked] = useState(false);
-  const [passcodeInput, setPasscodeInput] = useState('');
+  const [emailInput, setEmailInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
   const [authMessage, setAuthMessage] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [form, setForm] = useState<NewProductForm>(initialForm);
@@ -99,6 +103,30 @@ export function Admin() {
   const sortedProducts = useMemo(() => {
     return [...products].sort((a, b) => a.name.localeCompare(b.name));
   }, [products]);
+
+  const verifyAdminSession = async (session: Session | null) => {
+    if (!supabase || !session) {
+      setIsUnlocked(false);
+      return;
+    }
+
+    const { data, error } = await supabase.rpc('is_admin_user');
+    if (error) {
+      setIsUnlocked(false);
+      setAuthMessage(`Admin check failed: ${error.message}`);
+      return;
+    }
+
+    if (data === true) {
+      setIsUnlocked(true);
+      setAuthMessage('');
+      return;
+    }
+
+    await supabase.auth.signOut();
+    setIsUnlocked(false);
+    setAuthMessage('This account is not authorized for admin access.');
+  };
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -135,6 +163,7 @@ export function Admin() {
         next[product.id] = prev[product.id] || {
           name: product.name,
           description: product.description,
+          price: String(product.price),
           inStock: product.inStock,
         };
       }
@@ -142,11 +171,43 @@ export function Admin() {
     });
   }, [products]);
 
+  useEffect(() => {
+    const initializeAuth = async () => {
+      if (!supabase) {
+        setIsCheckingAuth(false);
+        setAuthMessage('Supabase auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+        return;
+      }
+
+      const { data } = await supabase.auth.getSession();
+      await verifyAdminSession(data.session);
+      setIsCheckingAuth(false);
+    };
+
+    void initializeAuth();
+
+    if (!supabase) return;
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      void verifyAdminSession(session);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.name.trim() || !form.description.trim() || form.images.length === 0) {
-      setMessage('Title, description, and at least one image are required.');
+    if (!form.name.trim() || !form.description.trim() || !form.price.trim() || form.images.length === 0) {
+      setMessage('Title, description, price, and at least one image are required.');
+      return;
+    }
+
+    const parsedPrice = Number(form.price);
+    if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+      setMessage('Enter a valid non-negative price.');
       return;
     }
 
@@ -159,7 +220,7 @@ export function Admin() {
       name: form.name.trim(),
       description: form.description.trim(),
       in_stock: form.inStock,
-      price: 0,
+      price: parsedPrice,
       images: form.images,
       category: 'totes',
       featured: false,
@@ -439,9 +500,9 @@ export function Admin() {
     }));
   };
 
-  const updateProductField = (id: string, field: 'name' | 'description' | 'inStock', value: string | boolean) => {
+  const updateProductField = (id: string, field: 'name' | 'description' | 'price' | 'inStock', value: string | boolean) => {
     setProductEdits((prev) => {
-      const current = prev[id] || { name: '', description: '', inStock: true };
+      const current = prev[id] || { name: '', description: '', price: '', inStock: true };
       return {
         ...prev,
         [id]: {
@@ -458,6 +519,7 @@ export function Admin() {
     return (
       draft.name !== product.name
       || draft.description !== product.description
+      || Number(draft.price) !== product.price
       || draft.inStock !== product.inStock
     );
   };
@@ -468,8 +530,15 @@ export function Admin() {
 
     const trimmedName = draft.name.trim();
     const trimmedDescription = draft.description.trim();
-    if (!trimmedName || !trimmedDescription) {
-      setMessage('Existing product title and description cannot be empty.');
+    const parsedPrice = Number(draft.price);
+
+    if (!trimmedName || !trimmedDescription || !draft.price.trim()) {
+      setMessage('Existing product title, description, and price cannot be empty.');
+      return;
+    }
+
+    if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+      setMessage('Enter a valid non-negative price for the existing product.');
       return;
     }
 
@@ -477,6 +546,7 @@ export function Admin() {
       ...product,
       name: trimmedName,
       description: trimmedDescription,
+      price: parsedPrice,
       inStock: draft.inStock,
     };
 
@@ -486,6 +556,7 @@ export function Admin() {
       [product.id]: {
         name: trimmedName,
         description: trimmedDescription,
+        price: String(parsedPrice),
         inStock: draft.inStock,
       },
     }));
@@ -500,6 +571,7 @@ export function Admin() {
       .update({
         name: trimmedName,
         description: trimmedDescription,
+        price: parsedPrice,
         in_stock: draft.inStock,
       })
       .eq('id', product.id);
@@ -515,9 +587,14 @@ export function Admin() {
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const trimmedPasscode = passcodeInput.trim();
-    if (!trimmedPasscode) {
-      setAuthMessage('Enter passcode.');
+    if (!supabase) {
+      setAuthMessage('Supabase auth is not configured.');
+      return;
+    }
+
+    const trimmedEmail = emailInput.trim();
+    if (!trimmedEmail || !passwordInput) {
+      setAuthMessage('Enter email and password.');
       return;
     }
 
@@ -525,61 +602,67 @@ export function Admin() {
     setAuthMessage('');
 
     try {
-      if (supabase) {
-        const { data, error } = await supabase.rpc('verify_admin_passcode', {
-          input_passcode: trimmedPasscode,
-        });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password: passwordInput,
+      });
 
-        if (error) {
-          setAuthMessage(`Auth check failed: ${error.message}`);
-          return;
-        }
-
-        if (data === true) {
-          setIsUnlocked(true);
-          setPasscodeInput('');
-          return;
-        }
-
-        setAuthMessage('Invalid passcode.');
+      if (error) {
+        setAuthMessage(`Sign-in failed: ${error.message}`);
         return;
       }
 
-      // Fallback for local dev when Supabase is not configured.
-      if (adminPasscode && trimmedPasscode === adminPasscode) {
-        setIsUnlocked(true);
-        setPasscodeInput('');
-        return;
-      }
-
-      setAuthMessage('Supabase auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+      setPasswordInput('');
+      await verifyAdminSession(data.session);
     } finally {
       setIsAuthenticating(false);
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+
     setIsUnlocked(false);
-    setPasscodeInput('');
+    setEmailInput('');
+    setPasswordInput('');
     setMessage('');
     setAuthMessage('Logged out successfully.');
     setProductEdits({});
   };
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-gray-100 py-10 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md mx-auto bg-white rounded-lg shadow p-6">
+          <p className="text-sm text-gray-600">Checking admin session...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isUnlocked) {
     return (
       <div className="min-h-screen bg-gray-100 py-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md mx-auto bg-white rounded-lg shadow p-6">
           <h1 className="text-xl font-bold text-gray-900 mb-2">Admin Access</h1>
-          <p className="text-sm text-gray-600 mb-4">Enter passcode to open the admin page.</p>
+          <p className="text-sm text-gray-600 mb-4">Sign in with the configured admin account.</p>
 
           <form onSubmit={handleUnlock} className="space-y-4">
             <input
-              type="password"
-              value={passcodeInput}
-              onChange={(e) => setPasscodeInput(e.target.value)}
+              type="email"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
               className="w-full border border-gray-300 rounded px-3 py-2"
-              placeholder="Enter admin passcode"
+              placeholder="Admin email"
+            />
+            <input
+              type="password"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              placeholder="Admin password"
             />
             {authMessage && <p className="text-sm text-red-700 bg-red-50 p-2 rounded">{authMessage}</p>}
             <button
@@ -587,7 +670,7 @@ export function Admin() {
               disabled={isAuthenticating}
               className="w-full bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
             >
-              {isAuthenticating ? 'Checking...' : 'Unlock Admin'}
+              {isAuthenticating ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
         </div>
@@ -640,6 +723,19 @@ export function Admin() {
                 />
                 In Stock
               </label>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Price (INR)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.price}
+                onChange={(e) => setForm((prev) => ({ ...prev, price: e.target.value }))}
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                placeholder="Enter product price"
+              />
             </div>
 
             <div className="md:col-span-2">
@@ -788,6 +884,18 @@ export function Admin() {
                       value={productEdits[product.id]?.description ?? product.description}
                       onChange={(e) => updateProductField(product.id, 'description', e.target.value)}
                       rows={3}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Price (INR)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={productEdits[product.id]?.price ?? String(product.price)}
+                      onChange={(e) => updateProductField(product.id, 'price', e.target.value)}
                       className="w-full border border-gray-300 rounded px-3 py-2"
                     />
                   </div>
