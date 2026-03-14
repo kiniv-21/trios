@@ -151,11 +151,11 @@ function App() {
                 className="group bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg overflow-hidden shadow-lg transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl cursor-pointer"
                 onClick={() => openProductModal(product)}
               >
-                <div className="relative h-64 overflow-hidden">
+                <div className="relative h-64 overflow-hidden bg-white">
                   <img 
                     src={product.images[0]} 
                     alt={product.name}
-                    className="w-full h-full object-cover transition-all duration-500 transform group-hover:scale-105"
+                    className="w-full h-full object-contain p-2 transition-all duration-500 transform group-hover:scale-105"
                   />
                   
                   <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
@@ -341,11 +341,11 @@ function App() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                  <div className="h-96 rounded-lg overflow-hidden bg-gray-700">
+                  <div className="h-96 rounded-lg overflow-hidden bg-white">
                     <img 
                       src={selectedProduct.images[selectedImageIndex] || selectedProduct.images[0]} 
                       alt={selectedProduct.name} 
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-contain p-2"
                     />
                   </div>
                   <div className="grid grid-cols-4 gap-2">
@@ -354,14 +354,14 @@ function App() {
                         key={index}
                         type="button"
                         onClick={() => setSelectedImageIndex(index)}
-                        className={`h-20 rounded-md overflow-hidden bg-gray-700 border-2 transition-colors ${
+                        className={`h-20 rounded-md overflow-hidden bg-white border-2 transition-colors flex items-center justify-center ${
                           selectedImageIndex === index ? 'border-indigo-500' : 'border-transparent hover:border-gray-500'
                         }`}
                       >
                         <img 
                           src={image} 
                           alt={`${selectedProduct.name} ${index + 1}`} 
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain p-1"
                         />
                       </button>
                     ))}

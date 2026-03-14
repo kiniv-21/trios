@@ -801,7 +801,7 @@ export function Admin() {
                           onClick={() => toggleSelectedImage(url)}
                           className={`border rounded p-1 ${isSelected ? 'border-indigo-600 ring-2 ring-indigo-200' : 'border-gray-300'}`}
                         >
-                          <img src={url} alt="Folder product" className="w-full h-24 object-cover rounded" />
+                          <img src={url} alt="Folder product" className="w-full h-24 object-contain bg-gray-100 rounded" />
                         </button>
                       );
                     })}
@@ -956,7 +956,7 @@ export function Admin() {
                                 onClick={() => toggleExistingProductImageSelection(product, url)}
                                 className={`border rounded p-1 ${selected ? 'border-indigo-600 ring-2 ring-indigo-200' : 'border-gray-300'}`}
                               >
-                                <img src={url} alt="Existing product" className="w-full h-20 object-cover rounded" />
+                                <img src={url} alt="Existing product" className="w-full h-20 object-contain bg-gray-100 rounded" />
                               </button>
                             );
                           })}
@@ -971,7 +971,7 @@ export function Admin() {
                         <div className="space-y-2">
                           {product.images.map((url, index) => (
                             <div key={url} className="flex items-center gap-2 border border-gray-200 rounded p-2">
-                              <img src={url} alt="Ordered product" className="w-14 h-14 object-cover rounded" />
+                              <img src={url} alt="Ordered product" className="w-14 h-14 object-contain bg-gray-100 rounded" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs text-gray-700 truncate">{index + 1}. {url}</p>
                               </div>
