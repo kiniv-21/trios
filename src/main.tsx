@@ -4,7 +4,8 @@ import App from './App.tsx';
 import { Admin } from './pages/Admin.tsx';
 import './index.css';
 
-const isAdminPath = /\/admin\/?$/.test(window.location.pathname);
+const path = window.location.pathname.replace('/trios-data', '');
+const isAdminPath = path === '/admin';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
