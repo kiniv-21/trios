@@ -107,7 +107,7 @@ function App() {
             Artistry Meets <span className="bg-gradient-to-r from-amber-400 to-yellow-500 text-transparent bg-clip-text">Sustainable</span> Fashion
           </h1>
           <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-            Each Trios Art bag is a unique canvas showcasing handcrafted artistry on eco-friendly jute. 
+            Each Trios Art bag is a unique canvas showcasing handcrafted artistry on eco-friendly materials. 
             Discover our collection of sustainable fashion statements.
           </p>
         </div>
@@ -140,7 +140,7 @@ function App() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-white mb-4">Our Collection</h2>
             <p className="text-gray-300 max-w-2xl mx-auto">
-              Explore our unique hand-painted jute bags, each piece crafted with care and artistic vision.
+              Explore our unique hand-painted products, each piece crafted with care and artistic vision.
             </p>
           </div>
 
@@ -215,7 +215,14 @@ function App() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-white">Eco-Friendly Materials</h3>
-                    <p className="text-gray-400">100% natural jute fiber, renewable and biodegradable</p>
+                    <p className="text-gray-400">Most of our products are made of 100% natural materials</p>
+                  </div>
+                </li>
+                <li className="flex items-start">
+                  <div className="bg-indigo-600 rounded-full p-1 mr-3 mt-1">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
                   </div>
                 </li>
                 <li className="flex items-start">
@@ -225,19 +232,8 @@ function App() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">Ethical Production</h3>
-                    <p className="text-gray-400">Fair wages and safe working conditions for artisans</p>
-                  </div>
-                </li>
-                <li className="flex items-start">
-                  <div className="bg-indigo-600 rounded-full p-1 mr-3 mt-1">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white">Water-Based Paints</h3>
-                    <p className="text-gray-400">Non-toxic, environmentally safe painting materials</p>
+                    <h3 className="font-semibold text-white">Wash-Proof Paints</h3>
+                    <p className="text-gray-400">The paint we use is wash proof; jute materials should only be air-dried</p>
                   </div>
                 </li>
               </ul>
