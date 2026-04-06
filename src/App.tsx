@@ -224,13 +224,6 @@ function App() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                </li>
-                <li className="flex items-start">
-                  <div className="bg-indigo-600 rounded-full p-1 mr-3 mt-1">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
                   <div>
                     <h3 className="font-semibold text-white">Wash-Proof Paints</h3>
                     <p className="text-gray-400">The paint we use is wash proof; jute materials should only be air-dried</p>
