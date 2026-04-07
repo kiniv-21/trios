@@ -68,6 +68,25 @@ const getStoragePathFromPublicUrl = (url: string) => {
   return url.slice(markerIndex + publicImagePrefix.length);
 };
 
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_IMAGE_SIZE_BYTES = 7 * 1024 * 1024; // 7 MB
+
+const sanitizeFileName = (name: string) =>
+  name
+    .replace(/[^a-zA-Z0-9._-]/g, '_')
+    .replace(/\.{2,}/g, '_')
+    .slice(0, 100);
+
+const validateImageFile = (file: File): string | null => {
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    return `"${file.name}" is not an allowed image type (JPEG, PNG, WebP, GIF only).`;
+  }
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    return `"${file.name}" exceeds the 7 MB size limit.`;
+  }
+  return null;
+};
+
 const getProductFolder = (product: Product) => {
   const firstImage = product.images[0];
   if (!firstImage) return toFolderName(product.name);
@@ -298,13 +317,20 @@ export function Admin() {
       const uploadedUrls: string[] = [];
 
       for (const file of Array.from(files)) {
-        const filePath = `${targetFolder}/${Date.now()}-${file.name}`;
+        const validationError = validateImageFile(file);
+        if (validationError) {
+          setMessage(validationError);
+          continue;
+        }
+
+        const safeName = sanitizeFileName(file.name);
+        const filePath = `${targetFolder}/${Date.now()}-${safeName}`;
         const { error } = await supabase.storage
           .from('product-images')
           .upload(filePath, file, { upsert: false });
 
         if (error) {
-          setMessage(`Image upload failed for ${file.name}: ${error.message}`);
+          setMessage('Image upload failed. Please try again.');
           continue;
         }
 
@@ -457,13 +483,20 @@ export function Admin() {
       const uploadedUrls: string[] = [];
 
       for (const file of Array.from(files)) {
-        const filePath = `${targetFolder}/${Date.now()}-${file.name}`;
+        const validationError = validateImageFile(file);
+        if (validationError) {
+          setMessage(validationError);
+          continue;
+        }
+
+        const safeName = sanitizeFileName(file.name);
+        const filePath = `${targetFolder}/${Date.now()}-${safeName}`;
         const { error } = await supabase.storage
           .from('product-images')
           .upload(filePath, file, { upsert: false });
 
         if (error) {
-          setMessage(`Image upload failed for ${file.name}: ${error.message}`);
+          setMessage('Image upload failed. Please try again.');
           continue;
         }
 
