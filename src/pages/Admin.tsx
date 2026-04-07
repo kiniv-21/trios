@@ -100,6 +100,8 @@ export function Admin() {
   const [existingLoading, setExistingLoading] = useState<Record<string, boolean>>({});
   const [existingUploading, setExistingUploading] = useState<Record<string, boolean>>({});
   const [productEdits, setProductEdits] = useState<Record<string, ProductEditDraft>>({});
+  const [siteContentEdits, setSiteContentEdits] = useState<Record<string, string>>({});
+  const [isSavingSiteContent, setIsSavingSiteContent] = useState(false);
 
   const newProductFolder = toFolderName(form.name);
 
@@ -154,8 +156,30 @@ export function Admin() {
       setIsLoadingProducts(false);
     };
 
+    const loadSiteContent = async () => {
+      if (!supabase) return;
+
+      const { data, error } = await supabase
+        .from('site_content')
+        .select('key, value');
+
+      if (error) {
+        console.error('Failed to load site content:', error.message);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const contentMap: Record<string, string> = {};
+        data.forEach((item: any) => {
+          contentMap[item.key] = item.value || '';
+        });
+        setSiteContentEdits(contentMap);
+      }
+    };
+
     if (isUnlocked) {
       loadProducts();
+      loadSiteContent();
     }
   }, [isUnlocked]);
 
@@ -644,6 +668,39 @@ export function Admin() {
     setProductEdits({});
   };
 
+  const handleSaveSiteContent = async () => {
+    if (!supabase) {
+      setMessage('Supabase is not configured.');
+      return;
+    }
+
+    setIsSavingSiteContent(true);
+
+    try {
+      const updates = Object.entries(siteContentEdits).map(([key, value]) => ({
+        key,
+        value: value || '',
+      }));
+
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('site_content')
+          .update({ value: update.value })
+          .eq('key', update.key);
+
+        if (error) {
+          setMessage(`Failed to save ${update.key}: ${error.message}`);
+          setIsSavingSiteContent(false);
+          return;
+        }
+      }
+
+      setMessage('Site content saved successfully.');
+    } finally {
+      setIsSavingSiteContent(false);
+    }
+  };
+
   if (isCheckingAuth) {
     return (
       <div className="min-h-screen bg-gray-100 py-10 px-4 sm:px-6 lg:px-8">
@@ -707,6 +764,138 @@ export function Admin() {
             >
               Log out
             </button>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Edit Site Content</h2>
+          {message && <p className="mb-4 text-sm text-indigo-700 bg-indigo-50 p-3 rounded">{message}</p>}
+
+          <div className="space-y-6">
+            {/* Hero Section */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Hero Section</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    value={siteContentEdits.hero_description || ''}
+                    onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, hero_description: e.target.value }))}
+                    rows={3}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Collection Section */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Collection Section</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <input
+                    value={siteContentEdits.collection_title || ''}
+                    onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, collection_title: e.target.value }))}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    value={siteContentEdits.collection_description || ''}
+                    onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, collection_description: e.target.value }))}
+                    rows={3}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* About Section */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">About Section</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <input
+                    value={siteContentEdits.about_title || ''}
+                    onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, about_title: e.target.value }))}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    value={siteContentEdits.about_description || ''}
+                    onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, about_description: e.target.value }))}
+                    rows={3}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Contact Section */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Contact Section</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <input
+                    value={siteContentEdits.contact_title || ''}
+                    onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_title: e.target.value }))}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    value={siteContentEdits.contact_description || ''}
+                    onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_description: e.target.value }))}
+                    rows={2}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input
+                      value={siteContentEdits.contact_email || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_email: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                    <input
+                      value={siteContentEdits.contact_phone || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_phone: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                    <input
+                      value={siteContentEdits.contact_location || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_location: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4 pt-4">
+              <button
+                type="button"
+                onClick={handleSaveSiteContent}
+                disabled={isSavingSiteContent}
+                className="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition disabled:opacity-50"
+              >
+                {isSavingSiteContent ? 'Saving...' : 'Save Site Content'}
+              </button>
+            </div>
           </div>
         </div>
 

@@ -37,6 +37,44 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [siteContent, setSiteContent] = useState<Record<string, string>>({
+    hero_title: 'Artistry Meets Sustainable Fashion',
+    hero_description: 'Each Trios Art bag is a unique canvas showcasing handcrafted artistry on eco-friendly materials. Discover our collection of sustainable fashion statements.',
+    collection_title: 'Our Collection',
+    collection_description: 'Explore our unique hand-painted products, each piece crafted with care and artistic vision.',
+    about_title: 'Sustainability at Our Core',
+    about_description: 'At Trios Art, sustainability isn\'t just a buzzword—it\'s our foundation. We believe that fashion and environmental responsibility can coexist beautifully.',
+    contact_title: 'Get in Touch',
+    contact_description: 'Interested in our products? Contact us for custom orders or inquiries.',
+    contact_email: 'info@triosart.com',
+    contact_phone: '+91 98454 98171',
+    contact_location: 'Bengaluru, Karnataka, India',
+  });
+
+  useEffect(() => {
+    const loadSiteContent = async () => {
+      if (!supabase) return;
+
+      const { data, error } = await supabase
+        .from('site_content')
+        .select('key, value');
+
+      if (error) {
+        console.error('Failed to load site content:', error.message);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const contentMap: Record<string, string> = {};
+        data.forEach((item: any) => {
+          contentMap[item.key] = item.value || '';
+        });
+        setSiteContent((prev) => ({ ...prev, ...contentMap }));
+      }
+    };
+
+    loadSiteContent();
+  }, []);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -107,8 +145,7 @@ function App() {
             Artistry Meets <span className="bg-gradient-to-r from-amber-400 to-yellow-500 text-transparent bg-clip-text">Sustainable</span> Fashion
           </h1>
           <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-            Each Trios Art bag is a unique canvas showcasing handcrafted artistry on eco-friendly materials. 
-            Discover our collection of sustainable fashion statements.
+            {siteContent.hero_description}
           </p>
         </div>
       </section>
@@ -138,9 +175,9 @@ function App() {
       <section className="py-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">Our Collection</h2>
+            <h2 className="text-3xl font-bold text-white mb-4">{siteContent.collection_title}</h2>
             <p className="text-gray-300 max-w-2xl mx-auto">
-              Explore our unique hand-painted products, each piece crafted with care and artistic vision.
+              {siteContent.collection_description}
             </p>
           </div>
 
@@ -202,9 +239,9 @@ function App() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold text-white mb-6">Sustainability at Our Core</h2>
+              <h2 className="text-3xl font-bold text-white mb-6">{siteContent.about_title}</h2>
               <p className="text-gray-300 mb-6">
-                At Trios Art, sustainability isn't just a buzzword—it's our foundation. We believe that fashion and environmental responsibility can coexist beautifully.
+                {siteContent.about_description}
               </p>
               <ul className="space-y-4">
                 <li className="flex items-start">
@@ -244,9 +281,9 @@ function App() {
       <section className="py-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">Get in Touch</h2>
+            <h2 className="text-3xl font-bold text-white mb-4">{siteContent.contact_title}</h2>
             <p className="text-gray-300 mb-8">
-              Interested in our products? Contact us for custom orders or inquiries.
+              {siteContent.contact_description}
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -255,7 +292,7 @@ function App() {
                   <Mail className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-semibold text-white mb-2">Email</h3>
-                <p className="text-gray-300">info@triosart.com</p>
+                <p className="text-gray-300">{siteContent.contact_email}</p>
               </div>
               
               <div className="flex flex-col items-center">
@@ -263,7 +300,7 @@ function App() {
                   <Phone className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-semibold text-white mb-2">Phone</h3>
-                <p className="text-gray-300">+91 98454 98171</p>
+                <p className="text-gray-300">{siteContent.contact_phone}</p>
               </div>
               
               <div className="flex flex-col items-center">
@@ -271,7 +308,7 @@ function App() {
                   <MapPin className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-semibold text-white mb-2">Location</h3>
-                <p className="text-gray-300">Bengaluru, Karnataka, India</p>
+                <p className="text-gray-300">{siteContent.contact_location}</p>
               </div>
             </div>
           </div>
