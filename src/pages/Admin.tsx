@@ -102,6 +102,7 @@ export function Admin() {
   const [productEdits, setProductEdits] = useState<Record<string, ProductEditDraft>>({});
   const [siteContentEdits, setSiteContentEdits] = useState<Record<string, string>>({});
   const [isSavingSiteContent, setIsSavingSiteContent] = useState(false);
+  const [adminTab, setAdminTab] = useState<'content' | 'products'>('content');
 
   const newProductFolder = toFolderName(form.name);
 
@@ -751,10 +752,10 @@ export function Admin() {
     <div className="min-h-screen bg-gray-100 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">Admin - Product Management</h1>
-              <p className="text-sm text-gray-600">Add products and edit title, description, and stock status for all products.</p>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Admin Panel</h1>
+              <p className="text-sm text-gray-600">Manage your website content and products.</p>
             </div>
 
             <button
@@ -765,145 +766,276 @@ export function Admin() {
               Log out
             </button>
           </div>
-        </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Edit Site Content</h2>
-          {message && <p className="mb-4 text-sm text-indigo-700 bg-indigo-50 p-3 rounded">{message}</p>}
-
-          <div className="space-y-6">
-            {/* Hero Section */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Hero Section</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <textarea
-                    value={siteContentEdits.hero_description || ''}
-                    onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, hero_description: e.target.value }))}
-                    rows={3}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Collection Section */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Collection Section</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                  <input
-                    value={siteContentEdits.collection_title || ''}
-                    onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, collection_title: e.target.value }))}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <textarea
-                    value={siteContentEdits.collection_description || ''}
-                    onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, collection_description: e.target.value }))}
-                    rows={3}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* About Section */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">About Section</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                  <input
-                    value={siteContentEdits.about_title || ''}
-                    onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, about_title: e.target.value }))}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <textarea
-                    value={siteContentEdits.about_description || ''}
-                    onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, about_description: e.target.value }))}
-                    rows={3}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Contact Section */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Contact Section</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                  <input
-                    value={siteContentEdits.contact_title || ''}
-                    onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_title: e.target.value }))}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <textarea
-                    value={siteContentEdits.contact_description || ''}
-                    onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_description: e.target.value }))}
-                    rows={2}
-                    className="w-full border border-gray-300 rounded px-3 py-2"
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input
-                      value={siteContentEdits.contact_email || ''}
-                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_email: e.target.value }))}
-                      className="w-full border border-gray-300 rounded px-3 py-2"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                    <input
-                      value={siteContentEdits.contact_phone || ''}
-                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_phone: e.target.value }))}
-                      className="w-full border border-gray-300 rounded px-3 py-2"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                    <input
-                      value={siteContentEdits.contact_location || ''}
-                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_location: e.target.value }))}
-                      className="w-full border border-gray-300 rounded px-3 py-2"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-4 pt-4">
-              <button
-                type="button"
-                onClick={handleSaveSiteContent}
-                disabled={isSavingSiteContent}
-                className="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition disabled:opacity-50"
-              >
-                {isSavingSiteContent ? 'Saving...' : 'Save Site Content'}
-              </button>
-            </div>
+          {/* Tab Navigation */}
+          <div className="flex gap-4 border-b border-gray-200">
+            <button
+              type="button"
+              onClick={() => setAdminTab('content')}
+              className={`px-4 py-3 font-medium border-b-2 transition-colors ${
+                adminTab === 'content'
+                  ? 'border-indigo-600 text-indigo-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Page Content
+            </button>
+            <button
+              type="button"
+              onClick={() => setAdminTab('products')}
+              className={`px-4 py-3 font-medium border-b-2 transition-colors ${
+                adminTab === 'products'
+                  ? 'border-indigo-600 text-indigo-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Product Management
+            </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Add Product</h2>
-          {message && <p className="mb-4 text-sm text-indigo-700 bg-indigo-50 p-3 rounded">{message}</p>}
+        {/* Page Content Tab */}
+        {adminTab === 'content' && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Edit Site Content</h2>
+            {message && <p className="mb-4 text-sm text-indigo-700 bg-indigo-50 p-3 rounded">{message}</p>}
 
-          <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-6">
+              {/* Hero Section */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Hero Section</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea
+                      value={siteContentEdits.hero_description || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, hero_description: e.target.value }))}
+                      rows={3}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Collection Section */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Collection Section</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <input
+                      value={siteContentEdits.collection_title || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, collection_title: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea
+                      value={siteContentEdits.collection_description || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, collection_description: e.target.value }))}
+                      rows={3}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* About Section */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">About Section</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <input
+                      value={siteContentEdits.about_title || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, about_title: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea
+                      value={siteContentEdits.about_description || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, about_description: e.target.value }))}
+                      rows={3}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-3">Benefit Bullets</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Bullet 1 Title</label>
+                        <input
+                          value={siteContentEdits.about_bullet_1_title || ''}
+                          onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, about_bullet_1_title: e.target.value }))}
+                          className="w-full border border-gray-300 rounded px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Bullet 1 Description</label>
+                        <textarea
+                          value={siteContentEdits.about_bullet_1_desc || ''}
+                          onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, about_bullet_1_desc: e.target.value }))}
+                          rows={2}
+                          className="w-full border border-gray-300 rounded px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Bullet 2 Title</label>
+                        <input
+                          value={siteContentEdits.about_bullet_2_title || ''}
+                          onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, about_bullet_2_title: e.target.value }))}
+                          className="w-full border border-gray-300 rounded px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Bullet 2 Description</label>
+                        <textarea
+                          value={siteContentEdits.about_bullet_2_desc || ''}
+                          onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, about_bullet_2_desc: e.target.value }))}
+                          rows={2}
+                          className="w-full border border-gray-300 rounded px-3 py-2"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Section */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Contact Section</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <input
+                      value={siteContentEdits.contact_title || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_title: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea
+                      value={siteContentEdits.contact_description || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_description: e.target.value }))}
+                      rows={2}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                      <input
+                        value={siteContentEdits.contact_email || ''}
+                        onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_email: e.target.value }))}
+                        className="w-full border border-gray-300 rounded px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                      <input
+                        value={siteContentEdits.contact_phone || ''}
+                        onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_phone: e.target.value }))}
+                        className="w-full border border-gray-300 rounded px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                      <input
+                        value={siteContentEdits.contact_location || ''}
+                        onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_location: e.target.value }))}
+                        className="w-full border border-gray-300 rounded px-3 py-2"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Section */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Footer Section</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Copyright Text (use {} for year)</label>
+                    <input
+                      value={siteContentEdits.footer_copyright || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, footer_copyright: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                      placeholder="© {} Trios Art. All rights reserved."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Footer Description</label>
+                    <textarea
+                      value={siteContentEdits.footer_description || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, footer_description: e.target.value }))}
+                      rows={2}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Social Media Links */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Social Media Links</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Facebook URL</label>
+                    <input
+                      value={siteContentEdits.social_facebook || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, social_facebook: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                      placeholder="https://facebook.com/triosart"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Instagram URL</label>
+                    <input
+                      value={siteContentEdits.social_instagram || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, social_instagram: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                      placeholder="https://instagram.com/triosart"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Twitter URL</label>
+                    <input
+                      value={siteContentEdits.social_twitter || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, social_twitter: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                      placeholder="https://twitter.com/triosart"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="button"
+                  onClick={handleSaveSiteContent}
+                  disabled={isSavingSiteContent}
+                  className="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition disabled:opacity-50"
+                >
+                  {isSavingSiteContent ? 'Saving...' : 'Save All Changes'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Product Management Tab */}
+        {adminTab === 'products' && (
+          <>
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Add Product</h2>
+              {message && <p className="mb-4 text-sm text-indigo-700 bg-indigo-50 p-3 rounded">{message}</p>}
+
+              <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Product Title</label>
               <input
@@ -1056,10 +1188,10 @@ export function Admin() {
               </button>
             </div>
           </form>
-        </div>
+            </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">All Products</h2>
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">All Products</h2>
           {isLoadingProducts && <p className="text-sm text-gray-500 mb-4">Loading products from Supabase...</p>}
           <div className="space-y-4">
             {sortedProducts.map((product) => (
@@ -1240,7 +1372,9 @@ export function Admin() {
               </div>
             ))}
           </div>
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

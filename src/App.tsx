@@ -251,8 +251,8 @@ function App() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">Eco-Friendly Materials</h3>
-                    <p className="text-gray-400">Most of our products are made of 100% natural materials</p>
+                    <h3 className="font-semibold text-white">{siteContent.about_bullet_1_title}</h3>
+                    <p className="text-gray-400">{siteContent.about_bullet_1_desc}</p>
                   </div>
                 </li>
                 <li className="flex items-start">
@@ -262,8 +262,8 @@ function App() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">Wash-Proof Paints</h3>
-                    <p className="text-gray-400">The paint we use is wash proof; jute materials should only be air-dried</p>
+                    <h3 className="font-semibold text-white">{siteContent.about_bullet_2_title}</h3>
+                    <p className="text-gray-400">{siteContent.about_bullet_2_desc}</p>
                   </div>
                 </li>
               </ul>
@@ -327,13 +327,13 @@ function App() {
             </div>
             
             <div className="flex space-x-6">
-              <a href="#" className="text-gray-300 hover:text-white transition-colors">
+              <a href={siteContent.social_facebook || '#'} className="text-gray-300 hover:text-white transition-colors">
                 <Facebook size={20} />
               </a>
-              <a href="#" className="text-gray-300 hover:text-white transition-colors">
+              <a href={siteContent.social_instagram || '#'} className="text-gray-300 hover:text-white transition-colors">
                 <Instagram size={20} />
               </a>
-              <a href="#" className="text-gray-300 hover:text-white transition-colors">
+              <a href={siteContent.social_twitter || '#'} className="text-gray-300 hover:text-white transition-colors">
                 <Twitter size={20} />
               </a>
             </div>
@@ -341,10 +341,10 @@ function App() {
           
           <div className="mt-6 pt-6 border-t border-gray-800 text-center">
             <p className="text-gray-400">
-              &copy; {new Date().getFullYear()} Trios Art. All rights reserved.
+              {siteContent.footer_copyright ? siteContent.footer_copyright.replace('{}', new Date().getFullYear().toString()) : `© ${new Date().getFullYear()} Trios Art. All rights reserved.`}
             </p>
             <p className="text-gray-500 text-sm mt-2">
-              Handcrafted with sustainable materials and ethical practices.
+              {siteContent.footer_description}
             </p>
           </div>
         </div>
