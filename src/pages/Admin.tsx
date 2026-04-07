@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createClient, type Session } from '@supabase/supabase-js';
-import { products as staticProducts } from '../data/products';
+import { products as staticProducts, categories } from '../data/products';
 import { Product } from '../types';
 
 type AdminProduct = Product;
@@ -11,6 +11,7 @@ interface NewProductForm {
   price: string;
   inStock: boolean;
   images: string[];
+  category: string;
 }
 
 const initialForm: NewProductForm = {
@@ -19,6 +20,7 @@ const initialForm: NewProductForm = {
   price: '',
   inStock: true,
   images: [],
+  category: 'totes',
 };
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -46,6 +48,7 @@ interface ProductEditDraft {
   description: string;
   price: string;
   inStock: boolean;
+  category: string;
 }
 
 const mapProductRow = (row: ProductRow): AdminProduct => ({
@@ -165,6 +168,7 @@ export function Admin() {
           description: product.description,
           price: String(product.price),
           inStock: product.inStock,
+          category: product.category,
         };
       }
       return next;
@@ -222,7 +226,7 @@ export function Admin() {
       in_stock: form.inStock,
       price: parsedPrice,
       images: form.images,
-      category: 'totes',
+      category: form.category,
       featured: false,
     };
 
@@ -500,9 +504,13 @@ export function Admin() {
     }));
   };
 
-  const updateProductField = (id: string, field: 'name' | 'description' | 'price' | 'inStock', value: string | boolean) => {
+  const updateProductField = (
+    id: string,
+    field: 'name' | 'description' | 'price' | 'inStock' | 'category',
+    value: string | boolean,
+  ) => {
     setProductEdits((prev) => {
-      const current = prev[id] || { name: '', description: '', price: '', inStock: true };
+      const current = prev[id] || { name: '', description: '', price: '', inStock: true, category: 'totes' };
       return {
         ...prev,
         [id]: {
@@ -521,6 +529,7 @@ export function Admin() {
       || draft.description !== product.description
       || Number(draft.price) !== product.price
       || draft.inStock !== product.inStock
+      || draft.category !== product.category
     );
   };
 
@@ -548,6 +557,7 @@ export function Admin() {
       description: trimmedDescription,
       price: parsedPrice,
       inStock: draft.inStock,
+      category: draft.category,
     };
 
     setProducts((prev) => prev.map((p) => (p.id === product.id ? nextProduct : p)));
@@ -558,6 +568,7 @@ export function Admin() {
         description: trimmedDescription,
         price: String(parsedPrice),
         inStock: draft.inStock,
+        category: draft.category,
       },
     }));
 
@@ -573,6 +584,7 @@ export function Admin() {
         description: trimmedDescription,
         price: parsedPrice,
         in_stock: draft.inStock,
+        category: draft.category,
       })
       .eq('id', product.id);
 
@@ -738,6 +750,21 @@ export function Admin() {
               />
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select
+                value={form.category}
+                onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
+                className="w-full border border-gray-300 rounded px-3 py-2"
+              >
+                {categories.filter((cat) => cat.id !== 'all').map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Product Description</label>
               <textarea
@@ -898,6 +925,21 @@ export function Admin() {
                       onChange={(e) => updateProductField(product.id, 'price', e.target.value)}
                       className="w-full border border-gray-300 rounded px-3 py-2"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Category</label>
+                    <select
+                      value={productEdits[product.id]?.category ?? product.category}
+                      onChange={(e) => updateProductField(product.id, 'category', e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    >
+                      {categories.filter((cat) => cat.id !== 'all').map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="md:col-span-2 flex justify-end">
