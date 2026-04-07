@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Heart, Palette, Mail, Phone, MapPin, Facebook, Instagram, Twitter } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
-import { categories, products as staticProducts } from './data/products';
+import { categories as defaultCategories, products as staticProducts } from './data/products';
 import { Product } from './types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -27,16 +27,69 @@ const mapProductRow = (row: ProductRow): Product => ({
   price: Number(row.price || 0),
   description: row.description,
   images: Array.isArray(row.images) ? row.images : [],
-  category: row.category,
+  category: normalizeCategoryId(row.category),
   featured: Boolean(row.featured),
   inStock: Boolean(row.in_stock),
 });
+
+interface CategoryOption {
+  id: string;
+  name: string;
+}
+
+const normalizeCategoryId = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+
+const formatCategoryName = (id: string) =>
+  id
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+
+const parseStoredCategories = (rawValue?: string): CategoryOption[] => {
+  if (!rawValue) return [];
+
+  try {
+    const parsed = JSON.parse(rawValue);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .map((item) => {
+        if (typeof item === 'string') {
+          const id = normalizeCategoryId(item);
+          if (!id || id === 'all') return null;
+          return { id, name: formatCategoryName(id) };
+        }
+
+        if (item && typeof item === 'object' && typeof item.id === 'string') {
+          const id = normalizeCategoryId(item.id);
+          if (!id || id === 'all') return null;
+          const name = typeof item.name === 'string' && item.name.trim()
+            ? item.name.trim()
+            : formatCategoryName(id);
+          return { id, name };
+        }
+
+        return null;
+      })
+      .filter((item): item is CategoryOption => Boolean(item));
+  } catch {
+    return [];
+  }
+};
 
 function App() {
   const [products, setProducts] = useState<Product[]>(staticProducts);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [storedCategories, setStoredCategories] = useState<CategoryOption[]>([]);
   const [siteContent, setSiteContent] = useState<Record<string, string>>({
     hero_title: 'Artistry Meets Sustainable Fashion',
     hero_description: 'Each Trios Art bag is a unique canvas showcasing handcrafted artistry on eco-friendly materials. Discover our collection of sustainable fashion statements.',
@@ -70,11 +123,46 @@ function App() {
           contentMap[item.key] = item.value || '';
         });
         setSiteContent((prev) => ({ ...prev, ...contentMap }));
+        setStoredCategories(parseStoredCategories(contentMap.product_categories));
       }
     };
 
     loadSiteContent();
   }, []);
+
+  const mergedCategories = useMemo(() => {
+    const categoryMap = new Map<string, string>();
+
+    for (const category of defaultCategories) {
+      categoryMap.set(category.id, category.name);
+    }
+
+    for (const category of storedCategories) {
+      categoryMap.set(category.id, category.name);
+    }
+
+    for (const product of products) {
+      const id = normalizeCategoryId(product.category);
+      if (!id || id === 'all') continue;
+      if (!categoryMap.has(id)) {
+        categoryMap.set(id, formatCategoryName(id));
+      }
+    }
+
+    const allLabel = categoryMap.get('all') || 'All Products';
+    const dynamic = Array.from(categoryMap.entries())
+      .filter(([id]) => id !== 'all')
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    return [{ id: 'all', name: allLabel }, ...dynamic];
+  }, [products, storedCategories]);
+
+  useEffect(() => {
+    if (!mergedCategories.some((category) => category.id === selectedCategory)) {
+      setSelectedCategory('all');
+    }
+  }, [mergedCategories, selectedCategory]);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -100,7 +188,7 @@ function App() {
 
   const filteredProducts = selectedCategory === 'all'
     ? products
-    : products.filter(product => product.category === selectedCategory);
+    : products.filter(product => normalizeCategoryId(product.category) === selectedCategory);
 
   const openProductModal = (product: Product) => {
     setSelectedProduct(product);
@@ -154,7 +242,7 @@ function App() {
       <section className="py-8 bg-gradient-to-b from-indigo-900/30 to-gray-900/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap justify-center gap-4">
-            {categories.map(category => (
+            {mergedCategories.map(category => (
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}

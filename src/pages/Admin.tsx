@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createClient, type Session } from '@supabase/supabase-js';
-import { products as staticProducts, categories } from '../data/products';
+import { products as staticProducts, categories as defaultCategories } from '../data/products';
 import { Product } from '../types';
 
 type AdminProduct = Product;
@@ -51,6 +51,11 @@ interface ProductEditDraft {
   category: string;
 }
 
+interface CategoryOption {
+  id: string;
+  name: string;
+}
+
 const mapProductRow = (row: ProductRow): AdminProduct => ({
   id: row.id,
   name: row.name,
@@ -85,6 +90,53 @@ const validateImageFile = (file: File): string | null => {
     return `"${file.name}" exceeds the 7 MB size limit.`;
   }
   return null;
+};
+
+const normalizeCategoryId = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+
+const formatCategoryName = (id: string) =>
+  id
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+
+const parseStoredCategories = (rawValue?: string): CategoryOption[] => {
+  if (!rawValue) return [];
+
+  try {
+    const parsed = JSON.parse(rawValue);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .map((item) => {
+        if (typeof item === 'string') {
+          const id = normalizeCategoryId(item);
+          if (!id || id === 'all') return null;
+          return { id, name: formatCategoryName(id) };
+        }
+
+        if (item && typeof item === 'object' && typeof item.id === 'string') {
+          const id = normalizeCategoryId(item.id);
+          if (!id || id === 'all') return null;
+          const name = typeof item.name === 'string' && item.name.trim()
+            ? item.name.trim()
+            : formatCategoryName(id);
+          return { id, name };
+        }
+
+        return null;
+      })
+      .filter((item): item is CategoryOption => Boolean(item));
+  } catch {
+    return [];
+  }
 };
 
 const getProductFolder = (product: Product) => {
@@ -122,12 +174,39 @@ export function Admin() {
   const [siteContentEdits, setSiteContentEdits] = useState<Record<string, string>>({});
   const [isSavingSiteContent, setIsSavingSiteContent] = useState(false);
   const [adminTab, setAdminTab] = useState<'content' | 'products'>('content');
+  const [customCategories, setCustomCategories] = useState<CategoryOption[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   const newProductFolder = toFolderName(form.name);
 
   const sortedProducts = useMemo(() => {
     return [...products].sort((a, b) => a.name.localeCompare(b.name));
   }, [products]);
+
+  const categoryOptions = useMemo(() => {
+    const categoryMap = new Map<string, string>();
+
+    for (const category of defaultCategories) {
+      if (category.id === 'all') continue;
+      categoryMap.set(category.id, category.name);
+    }
+
+    for (const category of customCategories) {
+      categoryMap.set(category.id, category.name);
+    }
+
+    for (const product of products) {
+      const id = normalizeCategoryId(product.category);
+      if (!id || id === 'all') continue;
+      if (!categoryMap.has(id)) {
+        categoryMap.set(id, formatCategoryName(id));
+      }
+    }
+
+    return Array.from(categoryMap.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [customCategories, products]);
 
   const verifyAdminSession = async (session: Session | null) => {
     if (!supabase || !session) {
@@ -194,6 +273,7 @@ export function Admin() {
           contentMap[item.key] = item.value || '';
         });
         setSiteContentEdits(contentMap);
+        setCustomCategories(parseStoredCategories(contentMap.product_categories));
       }
     };
 
@@ -202,6 +282,16 @@ export function Admin() {
       loadSiteContent();
     }
   }, [isUnlocked]);
+
+  useEffect(() => {
+    if (categoryOptions.length === 0) return;
+    if (categoryOptions.some((category) => category.id === form.category)) return;
+
+    setForm((prev) => ({
+      ...prev,
+      category: categoryOptions[0].id,
+    }));
+  }, [categoryOptions, form.category]);
 
   useEffect(() => {
     setProductEdits((prev) => {
@@ -719,8 +809,7 @@ export function Admin() {
       for (const update of updates) {
         const { error } = await supabase
           .from('site_content')
-          .update({ value: update.value })
-          .eq('key', update.key);
+          .upsert({ key: update.key, value: update.value }, { onConflict: 'key' });
 
         if (error) {
           setMessage(`Failed to save ${update.key}: ${error.message}`);
@@ -733,6 +822,62 @@ export function Admin() {
     } finally {
       setIsSavingSiteContent(false);
     }
+  };
+
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const trimmedName = newCategoryName.trim();
+    if (!trimmedName) {
+      setMessage('Enter a category name.');
+      return;
+    }
+
+    const nextId = normalizeCategoryId(trimmedName);
+    if (!nextId || nextId === 'all') {
+      setMessage('Category name is invalid. Use letters and numbers.');
+      return;
+    }
+
+    if (categoryOptions.some((category) => category.id === nextId)) {
+      setMessage('Category already exists.');
+      return;
+    }
+
+    const nextCategory: CategoryOption = {
+      id: nextId,
+      name: trimmedName,
+    };
+
+    const nextCustomCategories = [...customCategories, nextCategory].sort((a, b) => a.name.localeCompare(b.name));
+    const serialized = JSON.stringify(nextCustomCategories);
+
+    setCustomCategories(nextCustomCategories);
+    setSiteContentEdits((prev) => ({
+      ...prev,
+      product_categories: serialized,
+    }));
+    setForm((prev) => ({
+      ...prev,
+      category: nextId,
+    }));
+    setNewCategoryName('');
+
+    if (!supabase) {
+      setMessage(`Category "${trimmedName}" added locally.`);
+      return;
+    }
+
+    const { error } = await supabase
+      .from('site_content')
+      .upsert({ key: 'product_categories', value: serialized }, { onConflict: 'key' });
+
+    if (error) {
+      setMessage(`Category added locally but failed to persist: ${error.message}`);
+      return;
+    }
+
+    setMessage(`Category "${trimmedName}" added.`);
   };
 
   if (isCheckingAuth) {
@@ -1074,6 +1219,35 @@ export function Admin() {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Add Product</h2>
               {message && <p className="mb-4 text-sm text-indigo-700 bg-indigo-50 p-3 rounded">{message}</p>}
 
+              <div className="border border-gray-200 rounded p-4 mb-6">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Category Management</h3>
+                <form onSubmit={handleAddCategory} className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    className="flex-1 border border-gray-300 rounded px-3 py-2"
+                    placeholder="Add new category (e.g. festive-bags)"
+                  />
+                  <button
+                    type="submit"
+                    className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+                  >
+                    Add Category
+                  </button>
+                </form>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {categoryOptions.map((category) => (
+                    <span
+                      key={category.id}
+                      className="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-700"
+                    >
+                      {category.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
               <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Product Title</label>
@@ -1117,7 +1291,7 @@ export function Admin() {
                 onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
                 className="w-full border border-gray-300 rounded px-3 py-2"
               >
-                {categories.filter((cat) => cat.id !== 'all').map((cat) => (
+                {categoryOptions.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
                   </option>
@@ -1294,7 +1468,7 @@ export function Admin() {
                       onChange={(e) => updateProductField(product.id, 'category', e.target.value)}
                       className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                     >
-                      {categories.filter((cat) => cat.id !== 'all').map((cat) => (
+                      {categoryOptions.map((cat) => (
                         <option key={cat.id} value={cat.id}>
                           {cat.name}
                         </option>
