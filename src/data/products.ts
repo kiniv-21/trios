@@ -50,7 +50,7 @@ export const products: Product[] = [
       'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Jute%20File%20Folder/Type%202.jpeg',
       'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Jute%20File%20Folder/Type%203%20Closed.jpeg'
     ],
-    category: 'clutch',
+    category: 'artifacts',
     featured: false,
     inStock: true
   },
@@ -82,7 +82,7 @@ export const products: Product[] = [
       'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Kalamkari%20Hand%20Painted%20sling%20bag/Type%203.jpeg',
       'https://vrslzovxbefihxcjniyo.supabase.co/storage/v1/object/public/product-images/Kalamkari%20Hand%20Painted%20sling%20bag/Type%204.jpeg'
     ],
-    category: 'messenger',
+    category: 'lunch',
     featured: false,
     inStock: true
   },
@@ -108,8 +108,10 @@ export const categories = [
   { id: 'all', name: 'All Products' },
   { id: 'totes', name: 'Tote Bags' },
   { id: 'shoulder', name: 'Shoulder Bags' },
-  { id: 'clutch', name: 'Clutches' },
-  { id: 'messenger', name: 'Messenger Bags' }
+  { id: 'artifacts', name: 'Artifacts' },
+  { id: 'lunch', name: 'Lunch Bags' },
+  { id: 'sling', name: 'Sling Bags' },
+  { id: 'wire', name: 'Wire Bags' }
 ];
 
 export const getProductById = (id: string): Product | undefined => {
