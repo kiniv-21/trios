@@ -172,6 +172,7 @@ export function Admin() {
   const [existingUploading, setExistingUploading] = useState<Record<string, boolean>>({});
   const [productEdits, setProductEdits] = useState<Record<string, ProductEditDraft>>({});
   const [siteContentEdits, setSiteContentEdits] = useState<Record<string, string>>({});
+  const [savedSiteContent, setSavedSiteContent] = useState<Record<string, string>>({});
   const [isSavingSiteContent, setIsSavingSiteContent] = useState(false);
   const [adminTab, setAdminTab] = useState<'content' | 'products'>('content');
   const [customCategories, setCustomCategories] = useState<CategoryOption[]>([]);
@@ -207,6 +208,21 @@ export function Admin() {
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [customCategories, products]);
+
+  const hasUnsavedSiteContentChanges = useMemo(() => {
+    const keys = new Set([
+      ...Object.keys(savedSiteContent),
+      ...Object.keys(siteContentEdits),
+    ]);
+
+    for (const key of keys) {
+      if ((savedSiteContent[key] || '') !== (siteContentEdits[key] || '')) {
+        return true;
+      }
+    }
+
+    return false;
+  }, [savedSiteContent, siteContentEdits]);
 
   const verifyAdminSession = async (session: Session | null) => {
     if (!supabase || !session) {
@@ -273,6 +289,7 @@ export function Admin() {
           contentMap[item.key] = item.value || '';
         });
         setSiteContentEdits(contentMap);
+        setSavedSiteContent(contentMap);
         setCustomCategories(parseStoredCategories(contentMap.product_categories));
       }
     };
@@ -819,6 +836,7 @@ export function Admin() {
       }
 
       setMessage('Site content saved successfully.');
+      setSavedSiteContent(siteContentEdits);
     } finally {
       setIsSavingSiteContent(false);
     }
@@ -983,6 +1001,20 @@ export function Admin() {
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Edit Site Content</h2>
             {message && <p className="mb-4 text-sm text-indigo-700 bg-indigo-50 p-3 rounded">{message}</p>}
+
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border border-gray-200 rounded p-4 bg-gray-50">
+              <p className="text-sm text-gray-700">
+                Changes here are saved as drafts until you click <span className="font-semibold">Save Page Content</span>.
+              </p>
+              <button
+                type="button"
+                onClick={handleSaveSiteContent}
+                disabled={isSavingSiteContent || !hasUnsavedSiteContentChanges}
+                className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSavingSiteContent ? 'Saving...' : 'Save Page Content'}
+              </button>
+            </div>
 
             <div className="space-y-6">
               {/* Hero Section */}
@@ -1202,10 +1234,10 @@ export function Admin() {
                 <button
                   type="button"
                   onClick={handleSaveSiteContent}
-                  disabled={isSavingSiteContent}
-                  className="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition disabled:opacity-50"
+                  disabled={isSavingSiteContent || !hasUnsavedSiteContentChanges}
+                  className="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSavingSiteContent ? 'Saving...' : 'Save All Changes'}
+                  {isSavingSiteContent ? 'Saving...' : 'Save Page Content'}
                 </button>
               </div>
             </div>
