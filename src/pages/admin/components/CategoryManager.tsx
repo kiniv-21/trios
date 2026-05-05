@@ -1,0 +1,204 @@
+import { CategoryOption } from '../types';
+
+interface CategoryManagerProps {
+  categoryOptions: CategoryOption[];
+  newCategoryName: string;
+  isSavingCategoryChange: boolean;
+  editingCategoryId: string | null;
+  editingCategoryName: string;
+  editingCategorySlug: string;
+  deletingCategoryId: string | null;
+  deleteReplacementCategoryId: string;
+  getProductsUsingCategoryCount: (categoryId: string) => number;
+  onNewCategoryNameChange: (value: string) => void;
+  onAddCategory: (e: React.FormEvent) => Promise<void>;
+  onStartCategoryEdit: (category: CategoryOption) => void;
+  onCancelCategoryEdit: () => void;
+  onEditingCategoryNameChange: (value: string) => void;
+  onEditingCategorySlugChange: (value: string) => void;
+  onSaveCategoryEdit: (category: CategoryOption) => Promise<void>;
+  onStartCategoryDelete: (category: CategoryOption) => void;
+  onCancelCategoryDelete: () => void;
+  onDeleteReplacementCategoryIdChange: (value: string) => void;
+  onDeleteCategory: (category: CategoryOption) => Promise<void>;
+}
+
+export function CategoryManager({
+  categoryOptions,
+  newCategoryName,
+  isSavingCategoryChange,
+  editingCategoryId,
+  editingCategoryName,
+  editingCategorySlug,
+  deletingCategoryId,
+  deleteReplacementCategoryId,
+  getProductsUsingCategoryCount,
+  onNewCategoryNameChange,
+  onAddCategory,
+  onStartCategoryEdit,
+  onCancelCategoryEdit,
+  onEditingCategoryNameChange,
+  onEditingCategorySlugChange,
+  onSaveCategoryEdit,
+  onStartCategoryDelete,
+  onCancelCategoryDelete,
+  onDeleteReplacementCategoryIdChange,
+  onDeleteCategory,
+}: CategoryManagerProps) {
+  return (
+    <div className="border border-gray-200 rounded p-4 mb-6">
+      <h3 className="text-sm font-semibold text-gray-900 mb-3">Category Management</h3>
+      <form onSubmit={onAddCategory} className="flex flex-col sm:flex-row gap-2">
+        <input
+          value={newCategoryName}
+          onChange={(e) => onNewCategoryNameChange(e.target.value)}
+          className="flex-1 border border-gray-300 rounded px-3 py-2"
+          placeholder="Add new category (e.g. festive-bags)"
+        />
+        <button
+          type="submit"
+          className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+        >
+          Add Category
+        </button>
+      </form>
+
+      <div className="mt-4 space-y-3">
+        <p className="text-xs font-semibold text-gray-700">Categories</p>
+        {categoryOptions.length === 0 && (
+          <p className="text-xs text-gray-500">No categories.</p>
+        )}
+
+        {categoryOptions.map((category) => {
+          const isEditing = editingCategoryId === category.id;
+          const isDeleting = deletingCategoryId === category.id;
+          const productsUsingCategory = getProductsUsingCategoryCount(category.id);
+
+          return (
+            <div key={category.id} className="border border-gray-200 rounded p-3 bg-gray-50 space-y-3">
+              {!isEditing && (
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">{category.name}</p>
+                    <p className="text-xs text-gray-500">id: {category.id}</p>
+                    <p className="text-xs text-gray-500">{productsUsingCategory} product(s) currently use this category.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onStartCategoryEdit(category)}
+                      disabled={isSavingCategoryChange}
+                      className="text-xs bg-white border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-100 disabled:opacity-50"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onStartCategoryDelete(category)}
+                      disabled={isSavingCategoryChange}
+                      className="text-xs bg-white border border-red-200 text-red-700 px-3 py-1.5 rounded hover:bg-red-50 disabled:opacity-50"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {isEditing && (
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Category Name</label>
+                    <input
+                      value={editingCategoryName}
+                      onChange={(e) => onEditingCategoryNameChange(e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Category Id (slug)</label>
+                    <input
+                      value={editingCategorySlug}
+                      onChange={(e) => onEditingCategorySlugChange(e.target.value)}
+                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Changing the id will reassign products from the old id to the new id.
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onSaveCategoryEdit(category)}
+                      disabled={isSavingCategoryChange}
+                      className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded hover:bg-indigo-700 disabled:opacity-50"
+                    >
+                      {isSavingCategoryChange ? 'Saving...' : 'Save'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onCancelCategoryEdit}
+                      disabled={isSavingCategoryChange}
+                      className="text-xs bg-white border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-100 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {isDeleting && (
+                <div className="space-y-2 border-t border-gray-200 pt-3">
+                  {productsUsingCategory > 0 && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Replacement Category</label>
+                      <select
+                        value={deleteReplacementCategoryId}
+                        onChange={(e) => onDeleteReplacementCategoryIdChange(e.target.value)}
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                      >
+                        <option value="">Select replacement category</option>
+                        {categoryOptions
+                          .filter((option) => option.id !== category.id)
+                          .map((option) => (
+                            <option key={option.id} value={option.id}>
+                              {option.name}
+                            </option>
+                          ))}
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {productsUsingCategory} product(s) will be moved to the replacement category.
+                      </p>
+                    </div>
+                  )}
+                  {productsUsingCategory === 0 && (
+                    <p className="text-xs text-gray-500">
+                      No products currently use this category. Delete will only remove it from the list.
+                    </p>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onDeleteCategory(category)}
+                      disabled={isSavingCategoryChange}
+                      className="text-xs bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700 disabled:opacity-50"
+                    >
+                      {isSavingCategoryChange ? 'Deleting...' : 'Confirm Delete'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onCancelCategoryDelete}
+                      disabled={isSavingCategoryChange}
+                      className="text-xs bg-white border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-100 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

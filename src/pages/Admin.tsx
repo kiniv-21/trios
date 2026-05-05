@@ -2,17 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { createClient, type Session } from '@supabase/supabase-js';
 import { products as staticProducts, categories as defaultCategories } from '../data/products';
 import { Product } from '../types';
-
-type AdminProduct = Product;
-
-interface NewProductForm {
-  name: string;
-  description: string;
-  price: string;
-  inStock: boolean;
-  images: string[];
-  category: string;
-}
+import { CategoryManager } from './admin/components/CategoryManager';
+import { ProductForm } from './admin/components/ProductForm';
+import { ProductList } from './admin/components/ProductList';
+import {
+  type AdminProduct,
+  type CategoryOption,
+  type NewProductForm,
+  type ProductEditDraft,
+} from './admin/types';
 
 const initialForm: NewProductForm = {
   name: '',
@@ -41,19 +39,6 @@ interface ProductRow {
   category: string;
   featured: boolean;
   in_stock: boolean;
-}
-
-interface ProductEditDraft {
-  name: string;
-  description: string;
-  price: string;
-  inStock: boolean;
-  category: string;
-}
-
-interface CategoryOption {
-  id: string;
-  name: string;
 }
 
 const mapProductRow = (row: ProductRow): AdminProduct => ({
@@ -214,10 +199,6 @@ export function Admin() {
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [customCategories, products]);
-
-  const customCategoriesSorted = useMemo(() => {
-    return [...customCategories].sort((a, b) => a.name.localeCompare(b.name));
-  }, [customCategories]);
 
   const getProductsUsingCategoryCount = (categoryId: string) => {
     return products.reduce((count, product) => {
@@ -581,6 +562,13 @@ export function Admin() {
         images: exists ? prev.images.filter((img) => img !== url) : [...prev.images, url],
       };
     });
+  };
+
+  const updateNewProductFormField = <K extends keyof NewProductForm>(
+    field: K,
+    value: NewProductForm[K]
+  ) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const updateProductImages = (productId: string, nextImages: string[]) => {
@@ -989,11 +977,11 @@ export function Admin() {
       return;
     }
 
-    const nextCustomCategories = customCategories.map((item) =>
-      item.id === category.id
-        ? { id: nextId, name: trimmedName }
-        : item
-    );
+    const editedCategory: CategoryOption = { id: nextId, name: trimmedName };
+    const nextCustomCategories = [
+      ...customCategories.filter((item) => item.id !== category.id),
+      editedCategory,
+    ];
 
     setIsSavingCategoryChange(true);
 
@@ -1455,516 +1443,65 @@ export function Admin() {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Add Product</h2>
               {message && <p className="mb-4 text-sm text-indigo-700 bg-indigo-50 p-3 rounded">{message}</p>}
 
-              <div className="border border-gray-200 rounded p-4 mb-6">
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">Category Management</h3>
-                <form onSubmit={handleAddCategory} className="flex flex-col sm:flex-row gap-2">
-                  <input
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
-                    className="flex-1 border border-gray-300 rounded px-3 py-2"
-                    placeholder="Add new category (e.g. festive-bags)"
-                  />
-                  <button
-                    type="submit"
-                    className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
-                  >
-                    Add Category
-                  </button>
-                </form>
+              <CategoryManager
+                categoryOptions={categoryOptions}
+                newCategoryName={newCategoryName}
+                isSavingCategoryChange={isSavingCategoryChange}
+                editingCategoryId={editingCategoryId}
+                editingCategoryName={editingCategoryName}
+                editingCategorySlug={editingCategorySlug}
+                deletingCategoryId={deletingCategoryId}
+                deleteReplacementCategoryId={deleteReplacementCategoryId}
+                getProductsUsingCategoryCount={getProductsUsingCategoryCount}
+                onNewCategoryNameChange={setNewCategoryName}
+                onAddCategory={handleAddCategory}
+                onStartCategoryEdit={startCategoryEdit}
+                onCancelCategoryEdit={cancelCategoryEdit}
+                onEditingCategoryNameChange={setEditingCategoryName}
+                onEditingCategorySlugChange={setEditingCategorySlug}
+                onSaveCategoryEdit={handleSaveCategoryEdit}
+                onStartCategoryDelete={startCategoryDelete}
+                onCancelCategoryDelete={cancelCategoryDelete}
+                onDeleteReplacementCategoryIdChange={setDeleteReplacementCategoryId}
+                onDeleteCategory={handleDeleteCategory}
+              />
 
-                <div className="mt-4 space-y-3">
-                  <p className="text-xs font-semibold text-gray-700">Custom Categories</p>
-                  {customCategoriesSorted.length === 0 && (
-                    <p className="text-xs text-gray-500">No custom categories yet.</p>
-                  )}
-
-                  {customCategoriesSorted.map((category) => {
-                    const isEditing = editingCategoryId === category.id;
-                    const isDeleting = deletingCategoryId === category.id;
-                    const productsUsingCategory = getProductsUsingCategoryCount(category.id);
-
-                    return (
-                      <div key={category.id} className="border border-gray-200 rounded p-3 bg-gray-50 space-y-3">
-                        {!isEditing && (
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                              <p className="text-sm font-semibold text-gray-800">{category.name}</p>
-                              <p className="text-xs text-gray-500">id: {category.id}</p>
-                              <p className="text-xs text-gray-500">{productsUsingCategory} product(s) currently use this category.</p>
-                            </div>
-                            <div className="flex gap-2">
-                              <button
-                                type="button"
-                                onClick={() => startCategoryEdit(category)}
-                                disabled={isSavingCategoryChange}
-                                className="text-xs bg-white border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-100 disabled:opacity-50"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => startCategoryDelete(category)}
-                                disabled={isSavingCategoryChange}
-                                className="text-xs bg-white border border-red-200 text-red-700 px-3 py-1.5 rounded hover:bg-red-50 disabled:opacity-50"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </div>
-                        )}
-
-                        {isEditing && (
-                          <div className="space-y-2">
-                            <div>
-                              <label className="block text-xs font-medium text-gray-700 mb-1">Category Name</label>
-                              <input
-                                value={editingCategoryName}
-                                onChange={(e) => setEditingCategoryName(e.target.value)}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-700 mb-1">Category Id (slug)</label>
-                              <input
-                                value={editingCategorySlug}
-                                onChange={(e) => setEditingCategorySlug(e.target.value)}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                              />
-                              <p className="text-xs text-gray-500 mt-1">
-                                Changing the id will reassign products from the old id to the new id.
-                              </p>
-                            </div>
-                            <div className="flex gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleSaveCategoryEdit(category)}
-                                disabled={isSavingCategoryChange}
-                                className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded hover:bg-indigo-700 disabled:opacity-50"
-                              >
-                                {isSavingCategoryChange ? 'Saving...' : 'Save'}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={cancelCategoryEdit}
-                                disabled={isSavingCategoryChange}
-                                className="text-xs bg-white border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-100 disabled:opacity-50"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        )}
-
-                        {isDeleting && (
-                          <div className="space-y-2 border-t border-gray-200 pt-3">
-                            {productsUsingCategory > 0 && (
-                              <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Replacement Category</label>
-                                <select
-                                  value={deleteReplacementCategoryId}
-                                  onChange={(e) => setDeleteReplacementCategoryId(e.target.value)}
-                                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                                >
-                                  <option value="">Select replacement category</option>
-                                  {categoryOptions
-                                    .filter((option) => option.id !== category.id)
-                                    .map((option) => (
-                                      <option key={option.id} value={option.id}>
-                                        {option.name}
-                                      </option>
-                                    ))}
-                                </select>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  {productsUsingCategory} product(s) will be moved to the replacement category.
-                                </p>
-                              </div>
-                            )}
-                            {productsUsingCategory === 0 && (
-                              <p className="text-xs text-gray-500">
-                                No products currently use this category. Delete will only remove it from the custom list.
-                              </p>
-                            )}
-                            <div className="flex gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteCategory(category)}
-                                disabled={isSavingCategoryChange}
-                                className="text-xs bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700 disabled:opacity-50"
-                              >
-                                {isSavingCategoryChange ? 'Deleting...' : 'Confirm Delete'}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={cancelCategoryDelete}
-                                disabled={isSavingCategoryChange}
-                                className="text-xs bg-white border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-100 disabled:opacity-50"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-4">
-                  <p className="text-xs font-semibold text-gray-700 mb-2">All Active Categories</p>
-                  <div className="flex flex-wrap gap-2">
-                    {categoryOptions.map((category) => (
-                      <span
-                        key={category.id}
-                        className="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-700"
-                      >
-                        {category.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Product Title</label>
-              <input
-                value={form.name}
-                onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                placeholder="Enter product title"
+              <ProductForm
+                form={form}
+                categoryOptions={categoryOptions}
+                newProductFolder={newProductFolder}
+                isUploadingImages={isUploadingImages}
+                isLoadingFolder={isLoadingFolder}
+                folderImageUrls={folderImageUrls}
+                onSubmit={handleAddProduct}
+                onFormFieldChange={updateNewProductFormField}
+                onUploadImages={handleUploadImages}
+                onLoadFolderImages={handleLoadFolderImages}
+                onToggleSelectedImage={toggleSelectedImage}
               />
             </div>
 
-            <div className="flex items-end">
-              <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={form.inStock}
-                  onChange={(e) => setForm((prev) => ({ ...prev, inStock: e.target.checked }))}
-                  className="h-4 w-4"
-                />
-                In Stock
-              </label>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Price (INR)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.price}
-                onChange={(e) => setForm((prev) => ({ ...prev, price: e.target.value }))}
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                placeholder="Enter product price"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-              <select
-                value={form.category}
-                onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
-                className="w-full border border-gray-300 rounded px-3 py-2"
-              >
-                {categoryOptions.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Product Description</label>
-              <textarea
-                value={form.description}
-                onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-                rows={4}
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                placeholder="Enter product description"
-              />
-            </div>
-
-            <div className="md:col-span-2 border border-gray-200 rounded p-4 space-y-4">
-              <p className="text-sm font-semibold text-gray-800">Product Images (Supabase Storage)</p>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">New Product Folder</label>
-                <input
-                  value={newProductFolder}
-                  readOnly
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                  placeholder="Folder auto-generated from title"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  A new folder is auto-created in `product-images` using the product title.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <label className="bg-gray-100 border border-gray-300 px-3 py-2 rounded cursor-pointer text-sm hover:bg-gray-200">
-                  {isUploadingImages ? 'Uploading...' : 'Upload New Images'}
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleUploadImages}
-                    disabled={isUploadingImages || !newProductFolder}
-                  />
-                </label>
-
-                <button
-                  type="button"
-                  onClick={handleLoadFolderImages}
-                  disabled={isLoadingFolder}
-                  className="bg-white border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-50"
-                >
-                  {isLoadingFolder ? 'Loading...' : 'Load Images From Folder'}
-                </button>
-              </div>
-
-              {folderImageUrls.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-600 mb-2">Folder Images</p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {folderImageUrls.map((url) => {
-                      const isSelected = form.images.includes(url);
-                      return (
-                        <button
-                          key={url}
-                          type="button"
-                          onClick={() => toggleSelectedImage(url)}
-                          className={`border rounded p-1 ${isSelected ? 'border-indigo-600 ring-2 ring-indigo-200' : 'border-gray-300'}`}
-                        >
-                          <img src={url} alt="Folder product" className="w-full h-24 object-contain bg-gray-100 rounded" />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <p className="text-xs font-semibold text-gray-600 mb-2">Selected Images ({form.images.length})</p>
-                {form.images.length === 0 && <p className="text-xs text-gray-500">No images selected yet.</p>}
-                {form.images.length > 0 && (
-                  <div className="space-y-2">
-                    {form.images.map((url, idx) => (
-                      <div key={url} className="flex items-center gap-2">
-                        <span className="text-xs text-gray-700 truncate flex-1">{idx + 1}. {url}</span>
-                        <button
-                          type="button"
-                          onClick={() => toggleSelectedImage(url)}
-                          className="text-xs text-red-600 hover:text-red-700"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="md:col-span-2">
-              <button
-                type="submit"
-                className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
-              >
-                Done
-              </button>
-            </div>
-          </form>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">All Products</h2>
-          {isLoadingProducts && <p className="text-sm text-gray-500 mb-4">Loading products from Supabase...</p>}
-          <div className="space-y-4">
-            {sortedProducts.map((product) => (
-              <div key={product.id} className="border border-gray-200 rounded p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {hasProductEditChanges(product) && (
-                    <div className="md:col-span-2">
-                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
-                        You have unsaved title/description/stock changes for this product.
-                      </p>
-                    </div>
-                  )}
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Title</label>
-                    <input
-                      value={productEdits[product.id]?.name ?? product.name}
-                      onChange={(e) => updateProductField(product.id, 'name', e.target.value)}
-                      className="w-full border border-gray-300 rounded px-3 py-2"
-                    />
-                  </div>
-
-                  <div className="flex items-end">
-                    <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
-                      <input
-                        type="checkbox"
-                        checked={productEdits[product.id]?.inStock ?? product.inStock}
-                        onChange={(e) => updateProductField(product.id, 'inStock', e.target.checked)}
-                        className="h-4 w-4"
-                      />
-                      In Stock
-                    </label>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Description</label>
-                    <textarea
-                      value={productEdits[product.id]?.description ?? product.description}
-                      onChange={(e) => updateProductField(product.id, 'description', e.target.value)}
-                      rows={3}
-                      className="w-full border border-gray-300 rounded px-3 py-2"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Price (INR)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={productEdits[product.id]?.price ?? String(product.price)}
-                      onChange={(e) => updateProductField(product.id, 'price', e.target.value)}
-                      className="w-full border border-gray-300 rounded px-3 py-2"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Category</label>
-                    <select
-                      value={productEdits[product.id]?.category ?? product.category}
-                      onChange={(e) => updateProductField(product.id, 'category', e.target.value)}
-                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                    >
-                      {categoryOptions.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="md:col-span-2 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => handleDoneExistingProduct(product)}
-                      disabled={!hasProductEditChanges(product)}
-                      className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Done
-                    </button>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <p className="text-xs text-gray-500">
-                      Supabase Folder: <span className="font-medium text-gray-700">{getProductFolder(product)}</span>
-                    </p>
-                  </div>
-
-                  <div className="md:col-span-2 border border-gray-200 rounded p-4 space-y-3">
-                    <p className="text-xs font-semibold text-gray-700">Manage Existing Product Images</p>
-
-                    <div className="flex flex-wrap gap-2">
-                      <label className="bg-gray-100 border border-gray-300 px-3 py-2 rounded cursor-pointer text-xs hover:bg-gray-200">
-                        {existingUploading[product.id] ? 'Uploading...' : 'Upload To This Folder'}
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => handleUploadExistingProductImages(product, e)}
-                          disabled={Boolean(existingUploading[product.id])}
-                        />
-                      </label>
-
-                      <button
-                        type="button"
-                        onClick={() => handleLoadExistingFolderImages(product)}
-                        disabled={Boolean(existingLoading[product.id])}
-                        className="bg-white border border-gray-300 px-3 py-2 rounded text-xs hover:bg-gray-50"
-                      >
-                        {existingLoading[product.id] ? 'Loading...' : 'Load Folder Images'}
-                      </button>
-                    </div>
-
-                    {(existingFolderImages[product.id] || []).length > 0 && (
-                      <div>
-                        <p className="text-xs font-semibold text-gray-600 mb-2">Folder Images (click to add/remove from product)</p>
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                          {(existingFolderImages[product.id] || []).map((url) => {
-                            const selected = product.images.includes(url);
-                            return (
-                              <button
-                                key={url}
-                                type="button"
-                                onClick={() => toggleExistingProductImageSelection(product, url)}
-                                className={`border rounded p-1 ${selected ? 'border-indigo-600 ring-2 ring-indigo-200' : 'border-gray-300'}`}
-                              >
-                                <img src={url} alt="Existing product" className="w-full h-20 object-contain bg-gray-100 rounded" />
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                      // hi
-                    )}
-
-                    <div>
-                      <p className="text-xs font-semibold text-gray-600 mb-2">Product Image Order ({product.images.length})</p>
-                      {product.images.length === 0 && <p className="text-xs text-gray-500">No images linked to this product.</p>}
-                      {product.images.length > 0 && (
-                        <div className="space-y-2">
-                          {product.images.map((url, index) => (
-                            <div key={url} className="flex items-center gap-2 border border-gray-200 rounded p-2">
-                              <img src={url} alt="Ordered product" className="w-14 h-14 object-contain bg-gray-100 rounded" />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs text-gray-700 truncate">{index + 1}. {url}</p>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => moveProductImage(product, index, 'up')}
-                                disabled={index === 0}
-                                className="text-xs px-2 py-1 border border-gray-300 rounded disabled:opacity-40"
-                              >
-                                Up
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => moveProductImage(product, index, 'down')}
-                                disabled={index === product.images.length - 1}
-                                className="text-xs px-2 py-1 border border-gray-300 rounded disabled:opacity-40"
-                              >
-                                Down
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteExistingProductImage(product, url)}
-                                className="text-xs px-2 py-1 border border-red-300 text-red-700 rounded hover:bg-red-50"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-            </div>
+            <ProductList
+              isLoadingProducts={isLoadingProducts}
+              sortedProducts={sortedProducts}
+              productEdits={productEdits}
+              categoryOptions={categoryOptions}
+              existingFolderImages={existingFolderImages}
+              existingLoading={existingLoading}
+              existingUploading={existingUploading}
+              hasProductEditChanges={hasProductEditChanges}
+              updateProductField={updateProductField}
+              onDoneExistingProduct={handleDoneExistingProduct}
+              getProductFolder={getProductFolder}
+              onUploadExistingProductImages={handleUploadExistingProductImages}
+              onLoadExistingFolderImages={handleLoadExistingFolderImages}
+              onToggleExistingProductImageSelection={toggleExistingProductImageSelection}
+              onMoveProductImage={moveProductImage}
+              onDeleteExistingProductImage={handleDeleteExistingProductImage}
+            />
           </>
         )}
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
