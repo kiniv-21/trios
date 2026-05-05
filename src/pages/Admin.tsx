@@ -177,6 +177,12 @@ export function Admin() {
   const [adminTab, setAdminTab] = useState<'content' | 'products'>('content');
   const [customCategories, setCustomCategories] = useState<CategoryOption[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [isSavingCategoryChange, setIsSavingCategoryChange] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState('');
+  const [editingCategorySlug, setEditingCategorySlug] = useState('');
+  const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null);
+  const [deleteReplacementCategoryId, setDeleteReplacementCategoryId] = useState('');
 
   const newProductFolder = toFolderName(form.name);
 
@@ -208,6 +214,73 @@ export function Admin() {
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [customCategories, products]);
+
+  const customCategoriesSorted = useMemo(() => {
+    return [...customCategories].sort((a, b) => a.name.localeCompare(b.name));
+  }, [customCategories]);
+
+  const getProductsUsingCategoryCount = (categoryId: string) => {
+    return products.reduce((count, product) => {
+      return count + (normalizeCategoryId(product.category) === categoryId ? 1 : 0);
+    }, 0);
+  };
+
+  const applyLocalCategoryReassignment = (oldCategoryId: string, nextCategoryId: string) => {
+    setProducts((prev) =>
+      prev.map((product) =>
+        normalizeCategoryId(product.category) === oldCategoryId
+          ? { ...product, category: nextCategoryId }
+          : product
+      )
+    );
+
+    setProductEdits((prev) => {
+      const next: Record<string, ProductEditDraft> = {};
+
+      for (const [productId, draft] of Object.entries(prev)) {
+        next[productId] = normalizeCategoryId(draft.category) === oldCategoryId
+          ? { ...draft, category: nextCategoryId }
+          : draft;
+      }
+
+      return next;
+    });
+
+    setForm((prev) =>
+      normalizeCategoryId(prev.category) === oldCategoryId
+        ? { ...prev, category: nextCategoryId }
+        : prev
+    );
+  };
+
+  const saveCustomCategories = async (nextCustomCategories: CategoryOption[]) => {
+    const sortedCustomCategories = [...nextCustomCategories].sort((a, b) => a.name.localeCompare(b.name));
+    const serialized = JSON.stringify(sortedCustomCategories);
+
+    if (supabase) {
+      const { error } = await supabase
+        .from('site_content')
+        .upsert({ key: 'product_categories', value: serialized }, { onConflict: 'key' });
+
+      if (error) {
+        setMessage(`Failed to save categories: ${error.message}`);
+        return false;
+      }
+
+      setSavedSiteContent((prev) => ({
+        ...prev,
+        product_categories: serialized,
+      }));
+    }
+
+    setCustomCategories(sortedCustomCategories);
+    setSiteContentEdits((prev) => ({
+      ...prev,
+      product_categories: serialized,
+    }));
+
+    return true;
+  };
 
   const hasUnsavedSiteContentChanges = useMemo(() => {
     const keys = new Set([
@@ -868,34 +941,165 @@ export function Admin() {
     };
 
     const nextCustomCategories = [...customCategories, nextCategory].sort((a, b) => a.name.localeCompare(b.name));
-    const serialized = JSON.stringify(nextCustomCategories);
+    const didSave = await saveCustomCategories(nextCustomCategories);
+    if (!didSave) {
+      return;
+    }
 
-    setCustomCategories(nextCustomCategories);
-    setSiteContentEdits((prev) => ({
-      ...prev,
-      product_categories: serialized,
-    }));
     setForm((prev) => ({
       ...prev,
       category: nextId,
     }));
     setNewCategoryName('');
-
-    if (!supabase) {
-      setMessage(`Category "${trimmedName}" added locally.`);
-      return;
-    }
-
-    const { error } = await supabase
-      .from('site_content')
-      .upsert({ key: 'product_categories', value: serialized }, { onConflict: 'key' });
-
-    if (error) {
-      setMessage(`Category added locally but failed to persist: ${error.message}`);
-      return;
-    }
-
     setMessage(`Category "${trimmedName}" added.`);
+  };
+
+  const startCategoryEdit = (category: CategoryOption) => {
+    setEditingCategoryId(category.id);
+    setEditingCategoryName(category.name);
+    setEditingCategorySlug(category.id);
+    setDeletingCategoryId(null);
+    setDeleteReplacementCategoryId('');
+    setMessage('');
+  };
+
+  const cancelCategoryEdit = () => {
+    setEditingCategoryId(null);
+    setEditingCategoryName('');
+    setEditingCategorySlug('');
+  };
+
+  const handleSaveCategoryEdit = async (category: CategoryOption) => {
+    const trimmedName = editingCategoryName.trim();
+    const nextId = normalizeCategoryId(editingCategorySlug);
+
+    if (!trimmedName) {
+      setMessage('Category name cannot be empty.');
+      return;
+    }
+
+    if (!nextId || nextId === 'all') {
+      setMessage('Category id is invalid. Use letters and numbers only.');
+      return;
+    }
+
+    const hasDuplicate = categoryOptions.some((option) => option.id === nextId && option.id !== category.id);
+    if (hasDuplicate) {
+      setMessage('Another category with this id already exists.');
+      return;
+    }
+
+    const nextCustomCategories = customCategories.map((item) =>
+      item.id === category.id
+        ? { id: nextId, name: trimmedName }
+        : item
+    );
+
+    setIsSavingCategoryChange(true);
+
+    try {
+      if (supabase && nextId !== category.id) {
+        const { error } = await supabase
+          .from('products')
+          .update({ category: nextId })
+          .eq('category', category.id);
+
+        if (error) {
+          setMessage(`Failed to reassign products to the new category id: ${error.message}`);
+          return;
+        }
+      }
+
+      const didSave = await saveCustomCategories(nextCustomCategories);
+      if (!didSave) {
+        return;
+      }
+
+      if (nextId !== category.id) {
+        applyLocalCategoryReassignment(category.id, nextId);
+      }
+
+      setEditingCategoryId(null);
+      setEditingCategoryName('');
+      setEditingCategorySlug('');
+      setMessage(`Category "${trimmedName}" updated.`);
+    } finally {
+      setIsSavingCategoryChange(false);
+    }
+  };
+
+  const startCategoryDelete = (category: CategoryOption) => {
+    setDeletingCategoryId(category.id);
+    setDeleteReplacementCategoryId('');
+    setEditingCategoryId(null);
+    setEditingCategoryName('');
+    setEditingCategorySlug('');
+    setMessage('');
+  };
+
+  const cancelCategoryDelete = () => {
+    setDeletingCategoryId(null);
+    setDeleteReplacementCategoryId('');
+  };
+
+  const handleDeleteCategory = async (category: CategoryOption) => {
+    const productsUsingCategory = getProductsUsingCategoryCount(category.id);
+    const replacementId = normalizeCategoryId(deleteReplacementCategoryId);
+
+    if (productsUsingCategory > 0 && !replacementId) {
+      setMessage('Select a replacement category before deleting this category.');
+      return;
+    }
+
+    if (productsUsingCategory > 0 && replacementId === category.id) {
+      setMessage('Replacement category cannot be the same as the category being deleted.');
+      return;
+    }
+
+    if (productsUsingCategory > 0 && !categoryOptions.some((option) => option.id === replacementId && option.id !== category.id)) {
+      setMessage('Choose a valid replacement category.');
+      return;
+    }
+
+    const nextCustomCategories = customCategories.filter((item) => item.id !== category.id);
+    const fallbackCategoryId = categoryOptions.find((option) => option.id !== category.id)?.id || 'totes';
+
+    setIsSavingCategoryChange(true);
+
+    try {
+      if (supabase && productsUsingCategory > 0) {
+        const { error } = await supabase
+          .from('products')
+          .update({ category: replacementId })
+          .eq('category', category.id);
+
+        if (error) {
+          setMessage(`Failed to reassign products before delete: ${error.message}`);
+          return;
+        }
+      }
+
+      const didSave = await saveCustomCategories(nextCustomCategories);
+      if (!didSave) {
+        return;
+      }
+
+      if (productsUsingCategory > 0) {
+        applyLocalCategoryReassignment(category.id, replacementId);
+      } else {
+        setForm((prev) =>
+          normalizeCategoryId(prev.category) === category.id
+            ? { ...prev, category: fallbackCategoryId }
+            : prev
+        );
+      }
+
+      setDeletingCategoryId(null);
+      setDeleteReplacementCategoryId('');
+      setMessage(`Category "${category.name}" deleted.`);
+    } finally {
+      setIsSavingCategoryChange(false);
+    }
   };
 
   if (isCheckingAuth) {
@@ -1268,15 +1472,155 @@ export function Admin() {
                   </button>
                 </form>
 
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {categoryOptions.map((category) => (
-                    <span
-                      key={category.id}
-                      className="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-700"
-                    >
-                      {category.name}
-                    </span>
-                  ))}
+                <div className="mt-4 space-y-3">
+                  <p className="text-xs font-semibold text-gray-700">Custom Categories</p>
+                  {customCategoriesSorted.length === 0 && (
+                    <p className="text-xs text-gray-500">No custom categories yet.</p>
+                  )}
+
+                  {customCategoriesSorted.map((category) => {
+                    const isEditing = editingCategoryId === category.id;
+                    const isDeleting = deletingCategoryId === category.id;
+                    const productsUsingCategory = getProductsUsingCategoryCount(category.id);
+
+                    return (
+                      <div key={category.id} className="border border-gray-200 rounded p-3 bg-gray-50 space-y-3">
+                        {!isEditing && (
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                              <p className="text-sm font-semibold text-gray-800">{category.name}</p>
+                              <p className="text-xs text-gray-500">id: {category.id}</p>
+                              <p className="text-xs text-gray-500">{productsUsingCategory} product(s) currently use this category.</p>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => startCategoryEdit(category)}
+                                disabled={isSavingCategoryChange}
+                                className="text-xs bg-white border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-100 disabled:opacity-50"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => startCategoryDelete(category)}
+                                disabled={isSavingCategoryChange}
+                                className="text-xs bg-white border border-red-200 text-red-700 px-3 py-1.5 rounded hover:bg-red-50 disabled:opacity-50"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {isEditing && (
+                          <div className="space-y-2">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">Category Name</label>
+                              <input
+                                value={editingCategoryName}
+                                onChange={(e) => setEditingCategoryName(e.target.value)}
+                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">Category Id (slug)</label>
+                              <input
+                                value={editingCategorySlug}
+                                onChange={(e) => setEditingCategorySlug(e.target.value)}
+                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                              />
+                              <p className="text-xs text-gray-500 mt-1">
+                                Changing the id will reassign products from the old id to the new id.
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleSaveCategoryEdit(category)}
+                                disabled={isSavingCategoryChange}
+                                className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded hover:bg-indigo-700 disabled:opacity-50"
+                              >
+                                {isSavingCategoryChange ? 'Saving...' : 'Save'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={cancelCategoryEdit}
+                                disabled={isSavingCategoryChange}
+                                className="text-xs bg-white border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-100 disabled:opacity-50"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {isDeleting && (
+                          <div className="space-y-2 border-t border-gray-200 pt-3">
+                            {productsUsingCategory > 0 && (
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Replacement Category</label>
+                                <select
+                                  value={deleteReplacementCategoryId}
+                                  onChange={(e) => setDeleteReplacementCategoryId(e.target.value)}
+                                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                                >
+                                  <option value="">Select replacement category</option>
+                                  {categoryOptions
+                                    .filter((option) => option.id !== category.id)
+                                    .map((option) => (
+                                      <option key={option.id} value={option.id}>
+                                        {option.name}
+                                      </option>
+                                    ))}
+                                </select>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {productsUsingCategory} product(s) will be moved to the replacement category.
+                                </p>
+                              </div>
+                            )}
+                            {productsUsingCategory === 0 && (
+                              <p className="text-xs text-gray-500">
+                                No products currently use this category. Delete will only remove it from the custom list.
+                              </p>
+                            )}
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteCategory(category)}
+                                disabled={isSavingCategoryChange}
+                                className="text-xs bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700 disabled:opacity-50"
+                              >
+                                {isSavingCategoryChange ? 'Deleting...' : 'Confirm Delete'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={cancelCategoryDelete}
+                                disabled={isSavingCategoryChange}
+                                className="text-xs bg-white border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-100 disabled:opacity-50"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-4">
+                  <p className="text-xs font-semibold text-gray-700 mb-2">All Active Categories</p>
+                  <div className="flex flex-wrap gap-2">
+                    {categoryOptions.map((category) => (
+                      <span
+                        key={category.id}
+                        className="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-700"
+                      >
+                        {category.name}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
 
