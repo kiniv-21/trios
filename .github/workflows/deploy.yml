@@ -32,17 +32,31 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      - name: Checkout Public Repo
-        uses: actions/checkout@v4
-        with:
-          repository: kiniv-21/trios-data
-          token: ${{ secrets.DEPLOY_TOKEN }}
-          path: public-repo
-          ref: main
-          fetch-depth: 1
+      - name: Verify Deploy Token Access
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+        run: |
+          if [ -z "$DEPLOY_TOKEN" ]; then
+            echo "DEPLOY_TOKEN is missing. Add it in repo secrets."
+            exit 1
+          fi
+
+          http_code=$(curl -s -o /tmp/repo_check.json -w "%{http_code}" \
+            -H "Authorization: Bearer $DEPLOY_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/kiniv-21/trios-data)
+
+          if [ "$http_code" != "200" ]; then
+            echo "DEPLOY_TOKEN cannot access kiniv-21/trios-data (HTTP $http_code)."
+            cat /tmp/repo_check.json
+            exit 1
+          fi
 
       - name: Deploy to Public Repo
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
         run: |
+          git clone --depth 1 https://github.com/kiniv-21/trios-data.git public-repo
           find public-repo -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
           cp -R dist/. public-repo/
           cd public-repo
@@ -56,4 +70,4 @@ jobs:
           fi
 
           git commit -m "Deploy from private repo"
-          git push origin main
+          git push https://kiniv-21:${DEPLOY_TOKEN}@github.com/kiniv-21/trios-data.git HEAD:main
