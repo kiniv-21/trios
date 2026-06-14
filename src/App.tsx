@@ -1,5 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Heart, Palette, Mail, Phone, MapPin, Facebook, Instagram, Twitter } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Palette,
+  Leaf,
+  PenTool,
+  Scissors,
+  Sparkles,
+  Package,
+  MessageCircle,
+  Instagram,
+  Mail,
+  Phone,
+} from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { categories as defaultCategories, products as staticProducts } from './data/products';
 import { Product } from './types';
@@ -21,6 +32,53 @@ interface ProductRow {
   in_stock: boolean;
 }
 
+interface CategoryOption {
+  id: string;
+  name: string;
+}
+
+interface SiteContent {
+  hero_title?: string;
+  hero_description?: string;
+  collection_title?: string;
+  collection_description?: string;
+  about_title?: string;
+  about_description?: string;
+  about_bullet_1_title?: string;
+  about_bullet_1_desc?: string;
+  about_bullet_2_title?: string;
+  about_bullet_2_desc?: string;
+  contact_title?: string;
+  contact_description?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  contact_location?: string;
+  social_instagram?: string;
+  footer_copyright?: string;
+  footer_description?: string;
+}
+
+const defaultSiteContent: SiteContent = {
+  hero_title: 'Trios Art',
+  hero_description: 'A curated studio of hand-painted and handcrafted pieces where sustainability meets local artistry.',
+  collection_title: 'Collections',
+  collection_description: 'Begin with a collection to explore pieces crafted in small batches.',
+  about_title: 'The Heart of Trios Art',
+  about_description: 'Trios Art celebrates handmade craftsmanship where every piece is painted, finished, and curated with care.',
+  about_bullet_1_title: 'Handmade craftsmanship',
+  about_bullet_1_desc: 'Every piece carries intentional human detail and artistry.',
+  about_bullet_2_title: 'Sustainability first',
+  about_bullet_2_desc: 'Natural materials and thoughtful making processes reduce waste and elevate quality.',
+  contact_title: 'Bring Your Idea to Life',
+  contact_description: 'Start a conversation to commission, customize, or reserve a piece.',
+  contact_email: 'info@triosart.com',
+  contact_phone: '+91 98454 98171',
+  contact_location: 'Bengaluru, Karnataka, India',
+  social_instagram: '#',
+  footer_copyright: '© {} Trios Art. All rights reserved.',
+  footer_description: 'Handmade stories in sustainable form.',
+};
+
 const mapProductRow = (row: ProductRow): Product => ({
   id: row.id,
   name: row.name,
@@ -31,11 +89,6 @@ const mapProductRow = (row: ProductRow): Product => ({
   featured: Boolean(row.featured),
   inStock: Boolean(row.in_stock),
 });
-
-interface CategoryOption {
-  id: string;
-  name: string;
-}
 
 const normalizeCategoryId = (value: string) =>
   value
@@ -84,25 +137,46 @@ const parseStoredCategories = (rawValue?: string): CategoryOption[] => {
   }
 };
 
+const getCategorySubtitle = (categoryId: string) => {
+  const map: Record<string, string> = {
+    totes: 'Gallery-ready everyday carry pieces',
+    shoulder: 'Elegant silhouettes for daily artistry',
+    artifacts: 'Decor objects with hand-finished detail',
+    lunch: 'Functional forms with painted expression',
+    sling: 'Compact statement pieces',
+    wire: 'Textural craftsmanship with structure',
+  };
+
+  return map[categoryId] || 'Curated handmade collection';
+};
+
+const getProductStory = (product: Product) => ({
+  shortStory: product.description,
+  materials: 'Natural jute base, hand-mixed fabric paints, artisan-finished trims.',
+  dimensions: 'Available on request with piece-specific dimensions.',
+  customization: 'Color palette, motif style, and naming personalization available.',
+});
+
+const processSteps = [
+  { label: 'Concept', icon: Leaf },
+  { label: 'Design', icon: PenTool },
+  { label: 'Craft', icon: Scissors },
+  { label: 'Finish', icon: Sparkles },
+  { label: 'Deliver', icon: Package },
+];
+
 function App() {
   const [products, setProducts] = useState<Product[]>(staticProducts);
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [storedCategories, setStoredCategories] = useState<CategoryOption[]>([]);
+  const [siteContent, setSiteContent] = useState<SiteContent>(defaultSiteContent);
+
+  const [selectedCategory, setSelectedCategory] = useState<CategoryOption | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [storedCategories, setStoredCategories] = useState<CategoryOption[]>([]);
-  const [siteContent, setSiteContent] = useState<Record<string, string>>({
-    hero_title: 'Artistry Meets Sustainable Fashion',
-    hero_description: 'Each Trios Art bag is a unique canvas showcasing handcrafted artistry on eco-friendly materials. Discover our collection of sustainable fashion statements.',
-    collection_title: 'Our Collection',
-    collection_description: 'Explore our unique hand-painted products, each piece crafted with care and artistic vision.',
-    about_title: 'Sustainability at Our Core',
-    about_description: 'At Trios Art, sustainability isn\'t just a buzzword—it\'s our foundation. We believe that fashion and environmental responsibility can coexist beautifully.',
-    contact_title: 'Get in Touch',
-    contact_description: 'Interested in our products? Contact us for custom orders or inquiries.',
-    contact_email: 'info@triosart.com',
-    contact_phone: '+91 98454 98171',
-    contact_location: 'Bengaluru, Karnataka, India',
-  });
+  const [animateProducts, setAnimateProducts] = useState(false);
+  const [animateShowcase, setAnimateShowcase] = useState(false);
+
+  const productSectionRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const loadSiteContent = async () => {
@@ -122,6 +196,7 @@ function App() {
         data.forEach((item: any) => {
           contentMap[item.key] = item.value || '';
         });
+
         setSiteContent((prev) => ({ ...prev, ...contentMap }));
         setStoredCategories(parseStoredCategories(contentMap.product_categories));
       }
@@ -129,40 +204,6 @@ function App() {
 
     loadSiteContent();
   }, []);
-
-  const mergedCategories = useMemo(() => {
-    const categoryMap = new Map<string, string>();
-
-    for (const category of defaultCategories) {
-      categoryMap.set(category.id, category.name);
-    }
-
-    for (const category of storedCategories) {
-      categoryMap.set(category.id, category.name);
-    }
-
-    for (const product of products) {
-      const id = normalizeCategoryId(product.category);
-      if (!id || id === 'all') continue;
-      if (!categoryMap.has(id)) {
-        categoryMap.set(id, formatCategoryName(id));
-      }
-    }
-
-    const allLabel = categoryMap.get('all') || 'All Products';
-    const dynamic = Array.from(categoryMap.entries())
-      .filter(([id]) => id !== 'all')
-      .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-
-    return [{ id: 'all', name: allLabel }, ...dynamic];
-  }, [products, storedCategories]);
-
-  useEffect(() => {
-    if (!mergedCategories.some((category) => category.id === selectedCategory)) {
-      setSelectedCategory('all');
-    }
-  }, [mergedCategories, selectedCategory]);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -186,347 +227,448 @@ function App() {
     loadProducts();
   }, []);
 
-  const filteredProducts = selectedCategory === 'all'
-    ? products
-    : products.filter(product => normalizeCategoryId(product.category) === selectedCategory);
+  const mergedCategories = useMemo(() => {
+    const categoryMap = new Map<string, string>();
 
-  const openProductModal = (product: Product) => {
-    setSelectedProduct(product);
-    setSelectedImageIndex(0);
-  };
+    for (const category of defaultCategories) {
+      if (category.id === 'all') continue;
+      categoryMap.set(category.id, category.name);
+    }
 
-  const closeProductModal = () => {
+    for (const category of storedCategories) {
+      categoryMap.set(category.id, category.name);
+    }
+
+    for (const product of products) {
+      const id = normalizeCategoryId(product.category);
+      if (!id || id === 'all') continue;
+      if (!categoryMap.has(id)) {
+        categoryMap.set(id, formatCategoryName(id));
+      }
+    }
+
+    return Array.from(categoryMap.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [products, storedCategories]);
+
+  const categoryCovers = useMemo(() => {
+    const map: Record<string, string> = {};
+
+    for (const category of mergedCategories) {
+      const first = products.find((p) => normalizeCategoryId(p.category) === category.id);
+      if (first && first.images[0]) map[category.id] = first.images[0];
+    }
+
+    return map;
+  }, [mergedCategories, products]);
+
+  const categoryProductCount = useMemo(() => {
+    const map: Record<string, number> = {};
+
+    for (const category of mergedCategories) {
+      map[category.id] = products.filter((p) => normalizeCategoryId(p.category) === category.id).length;
+    }
+
+    return map;
+  }, [mergedCategories, products]);
+
+  const filteredProducts = useMemo(() => {
+    if (!selectedCategory) return [];
+    return products.filter((p) => normalizeCategoryId(p.category) === selectedCategory.id);
+  }, [products, selectedCategory]);
+
+  const openCategory = (category: CategoryOption) => {
+    setSelectedCategory(category);
     setSelectedProduct(null);
     setSelectedImageIndex(0);
+    setAnimateProducts(false);
+    setAnimateShowcase(false);
+
+    requestAnimationFrame(() => {
+      setAnimateProducts(true);
+      setTimeout(() => {
+        productSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 140);
+    });
   };
 
+  const openProduct = (product: Product) => {
+    setSelectedProduct(product);
+    setSelectedImageIndex(0);
+    setAnimateShowcase(false);
+
+    requestAnimationFrame(() => {
+      setAnimateShowcase(true);
+      setTimeout(() => {
+        document.getElementById('product-showcase')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 140);
+    });
+  };
+
+  const whatsappMessage = selectedProduct
+    ? `Hi Trios Art, I am interested in this piece: ${selectedProduct.name}.`
+    : selectedCategory
+      ? `Hi Trios Art, I would like to explore ${selectedCategory.name}.`
+      : 'Hi Trios Art, I would like to explore your handcrafted collections.';
+
+  const whatsappLink = `https://wa.me/919845498171?text=${encodeURIComponent(whatsappMessage)}`;
+  const instagramLink = siteContent.social_instagram || '#';
+  const emailLink = `mailto:${siteContent.contact_email || 'info@triosart.com'}`;
+  const phoneLink = `tel:${(siteContent.contact_phone || '+919845498171').replace(/\s+/g, '')}`;
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-indigo-900">
-      {/* Header */}
-      <header className="bg-gray-900 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Palette className="h-8 w-8 text-indigo-400" />
-              <span className="ml-2 text-2xl font-bold bg-gradient-to-r from-indigo-400 to-purple-500 text-transparent bg-clip-text">
-                Trios Art
-              </span>
-            </div>
-            <div className="hidden md:flex items-center space-x-6"></div>
-          </div>
+    <div className="min-h-screen bg-[#FAF7F2] text-[#2B2B2B]">
+      <a
+        href={whatsappLink}
+        target="_blank"
+        rel="noreferrer"
+        className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(22,163,74,0.35)] transition-all duration-300 hover:scale-105 hover:shadow-[0_16px_30px_rgba(22,163,74,0.42)] sm:bottom-6 sm:right-6 sm:px-5"
+      >
+        <MessageCircle size={18} />
+        WhatsApp
+      </a>
+
+      <header className="sticky top-0 z-40 border-b border-[#E8DED2] bg-[#FAF7F2]/90 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
+          <button
+            className="flex items-center gap-2"
+            onClick={() => {
+              setSelectedCategory(null);
+              setSelectedProduct(null);
+            }}
+          >
+            <Palette className="h-7 w-7 text-[#A67C52]" />
+            <span className="font-heading text-2xl">Trios Art</span>
+          </button>
+          <a
+            href={whatsappLink}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-full bg-[#A67C52] px-4 py-2 text-xs font-semibold tracking-wide text-white transition hover:bg-[#8F6843]"
+          >
+            WhatsApp Inquiry
+          </a>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative py-20">
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-indigo-900/90 to-purple-900/80 z-10"></div>
-          <img 
-            src="https://images.pexels.com/photos/6069544/pexels-photo-6069544.jpeg" 
-            alt="Hero background" 
-            className="w-full h-full object-cover"
-          />
-        </div>
-        
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            Artistry Meets <span className="bg-gradient-to-r from-amber-400 to-yellow-500 text-transparent bg-clip-text">Sustainable</span> Fashion
+      <main>
+        <section className="mx-auto max-w-7xl px-5 pb-8 pt-14 sm:px-8 sm:pb-10 sm:pt-20">
+          <p className="mb-4 text-sm uppercase tracking-[0.2em] text-[#A67C52]">Handmade Artisan Gallery</p>
+          <h1 className="font-heading text-[2.35rem] leading-[1.1] sm:text-6xl">
+            {siteContent.hero_title || 'Crafted Stories, Not Catalog Listings'}
           </h1>
-          <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-            {siteContent.hero_description}
+          <p className="mt-5 max-w-3xl text-[1.02rem] leading-relaxed text-[#6B6B6B] sm:mt-6 sm:text-lg">
+            {siteContent.hero_description || defaultSiteContent.hero_description}
           </p>
-        </div>
-      </section>
+          <div className="mt-6 flex flex-wrap gap-3 sm:mt-8">
+            <a
+              href={whatsappLink}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-[#A67C52] px-5 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-[#8F6843] hover:shadow-[0_10px_22px_rgba(166,124,82,0.35)]"
+            >
+              <MessageCircle size={16} />
+              WhatsApp Inquiry
+            </a>
+            <a
+              href={instagramLink}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-[#D9C8B7] bg-white px-5 py-3 text-sm font-semibold text-[#2B2B2B] transition-all duration-300 hover:bg-[#F7F1E8]"
+            >
+              <Instagram size={16} />
+              Instagram Message
+            </a>
+          </div>
+        </section>
 
-      {/* Category Filter */}
-      <section className="py-8 bg-gradient-to-b from-indigo-900/30 to-gray-900/30">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap justify-center gap-4">
-            {mergedCategories.map(category => (
+        <section className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-12" id="collections">
+          <div className="mb-8">
+            <h2 className="font-heading text-[2rem] leading-tight sm:text-4xl">{siteContent.collection_title || 'Collections'}</h2>
+            <p className="mt-3 text-[0.98rem] leading-relaxed text-[#6B6B6B] sm:text-base">{siteContent.collection_description}</p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {mergedCategories.map((category) => (
               <button
                 key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-6 py-3 rounded-full font-medium transition-all duration-200 ${
-                  selectedCategory === category.id
-                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'
-                }`}
+                onClick={() => openCategory(category)}
+                className="group overflow-hidden rounded-2xl border border-[#EFE5D9] bg-white text-left shadow-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_18px_34px_rgba(66,44,24,0.14)]"
               >
-                {category.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Products Grid */}
-      <section className="py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">{siteContent.collection_title}</h2>
-            <p className="text-gray-300 max-w-2xl mx-auto">
-              {siteContent.collection_description}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProducts.map(product => (
-              <div 
-                key={product.id}
-                className="group bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg overflow-hidden shadow-lg transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl cursor-pointer"
-                onClick={() => openProductModal(product)}
-              >
-                <div className="relative h-64 overflow-hidden bg-white">
-                  <img 
-                    src={product.images[0]} 
-                    alt={product.name}
-                    className="w-full h-full object-contain p-2 transition-all duration-500 transform group-hover:scale-105"
-                  />
-                  
-                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
-                  
-                  <button className="absolute top-4 right-4 p-2 bg-gray-900 bg-opacity-80 rounded-full text-white hover:bg-opacity-100 transition-all duration-200">
-                    <Heart size={20} className="text-white" />
-                  </button>
-
-                  {product.featured && (
-                    <div className="absolute top-0 left-0 bg-gradient-to-r from-amber-400 to-yellow-500 text-gray-900 px-3 py-1 text-xs font-bold uppercase tracking-wider">
-                      Featured
+                <div className="h-64 overflow-hidden bg-[#F4EEE6]">
+                  {categoryCovers[category.id] ? (
+                    <img
+                      src={categoryCovers[category.id]}
+                      alt={category.name}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-[#A67C52]">
+                      <Palette size={42} />
                     </div>
                   )}
                 </div>
-                
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-white group-hover:text-indigo-300 transition-colors duration-200 mb-2">
-                    {product.name}
-                  </h3>
-                  
-                  <p className="text-gray-300 text-sm mb-4 line-clamp-2">
-                    {product.description}
+                <div className="space-y-2 p-5 sm:p-6">
+                  <h3 className="font-heading text-[1.65rem] leading-tight sm:text-3xl">{category.name}</h3>
+                  <p className="text-[0.94rem] leading-relaxed text-[#6B6B6B] sm:text-sm">{getCategorySubtitle(category.id)}</p>
+                  <p className="text-xs uppercase tracking-[0.14em] text-[#A67C52]">
+                    {categoryProductCount[category.id] ?? 0} piece{categoryProductCount[category.id] !== 1 ? 's' : ''}
                   </p>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-white">₹{product.price.toFixed(2)}</span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      product.inStock 
-                        ? 'bg-green-900 text-green-300' 
-                        : 'bg-red-900 text-red-300'
-                    }`}>
-                      {product.inStock ? 'In Stock' : 'Out of Stock'}
-                    </span>
-                  </div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* About Section */}
-      <section className="py-16 bg-gradient-to-b from-indigo-900/30 to-gray-900/30">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        {selectedCategory && (
+          <section
+            ref={productSectionRef}
+            className={`mx-auto max-w-7xl px-5 py-14 transition-all duration-700 ease-out sm:px-8 ${
+              animateProducts ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'
+            }`}
+            id="category-products"
+          >
+            <div className="mb-8">
+              <p className="text-sm uppercase tracking-[0.2em] text-[#A67C52]">Selected Collection</p>
+              <h2 className="mt-2 font-heading text-4xl">{selectedCategory.name}</h2>
+            </div>
+
+            {filteredProducts.length === 0 ? (
+              <p className="text-[#6B6B6B]">This collection will be revealed soon.</p>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredProducts.map((product, index) => (
+                    <button
+                      key={product.id}
+                      onClick={() => openProduct(product)}
+                      className="overflow-hidden rounded-2xl border border-[#EFE5D9] bg-white text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                      style={{
+                        opacity: animateProducts ? 1 : 0,
+                        transform: animateProducts ? 'translateY(0)' : 'translateY(10px)',
+                        transition: `opacity 420ms ease ${index * 55}ms, transform 420ms ease ${index * 55}ms`,
+                      }}
+                    >
+                      <div className="h-64 bg-[#F7F1E8] p-3">
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
+                      <div className="p-5 sm:p-6">
+                        <h3 className="font-heading text-[1.6rem] leading-tight sm:text-2xl">{product.name}</h3>
+                        <p className="mt-2 line-clamp-2 text-[0.95rem] leading-relaxed text-[#6B6B6B] sm:text-sm">{product.description}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {selectedProduct && (
+                  <article
+                    id="product-showcase"
+                    className={`mt-10 rounded-3xl border border-[#E9DDCF] bg-white p-6 shadow-md transition-all duration-700 ease-out sm:p-10 ${
+                      animateShowcase ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'
+                    }`}
+                  >
+                    <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
+                        <div className="space-y-4">
+                        <div className="flex h-[420px] items-center justify-center rounded-2xl bg-[#F7F1E8] p-4">
+                          <img
+                            src={selectedProduct.images[selectedImageIndex] || selectedProduct.images[0]}
+                            alt={selectedProduct.name}
+                            className="h-full w-full object-contain"
+                          />
+                        </div>
+                        {selectedProduct.images.length > 1 && (
+                          <div className="grid grid-cols-5 gap-2">
+                            {selectedProduct.images.map((image, index) => (
+                              <button
+                                key={image}
+                                onClick={() => setSelectedImageIndex(index)}
+                                className={`h-20 overflow-hidden rounded-lg border bg-[#F7F1E8] p-1 ${
+                                  selectedImageIndex === index ? 'border-[#A67C52]' : 'border-transparent'
+                                }`}
+                              >
+                                <img src={image} alt={`${selectedProduct.name} ${index + 1}`} className="h-full w-full object-contain" />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-6">
+                        <div>
+                          <p className="text-sm uppercase tracking-[0.2em] text-[#A67C52]">Product Story</p>
+                          <h3 className="mt-2 font-heading text-[2.05rem] leading-tight sm:text-4xl">{selectedProduct.name}</h3>
+                        </div>
+
+                        <p className="text-[1.02rem] leading-relaxed text-[#6B6B6B] sm:text-base">{getProductStory(selectedProduct).shortStory}</p>
+
+                        <div className="space-y-4 rounded-2xl bg-[#FBF8F3] p-5">
+                          <div>
+                            <h4 className="font-semibold text-[#2B2B2B]">Materials</h4>
+                            <p className="text-sm text-[#6B6B6B]">{getProductStory(selectedProduct).materials}</p>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-[#2B2B2B]">Dimensions</h4>
+                            <p className="text-sm text-[#6B6B6B]">{getProductStory(selectedProduct).dimensions}</p>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-[#2B2B2B]">Customization Options</h4>
+                            <p className="text-sm text-[#6B6B6B]">{getProductStory(selectedProduct).customization}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          <span className="rounded-full bg-[#F1E4D6] px-4 py-2 text-xs font-semibold text-[#7F5B3A]">Handcrafted</span>
+                          <span className="rounded-full bg-[#F1E4D6] px-4 py-2 text-xs font-semibold text-[#7F5B3A]">Eco-Friendly</span>
+                          <span className="rounded-full bg-[#F1E4D6] px-4 py-2 text-xs font-semibold text-[#7F5B3A]">Customizable</span>
+                        </div>
+
+                        <div className="rounded-2xl border border-[#E9DDCF] p-5">
+                          <p className="mb-4 font-heading text-2xl">Interested in this piece?</p>
+                          <div className="flex flex-wrap gap-3">
+                            <a
+                              href={whatsappLink}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-2 rounded-full bg-[#A67C52] px-5 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-[#8F6843] hover:shadow-[0_10px_22px_rgba(166,124,82,0.35)]"
+                            >
+                              <MessageCircle size={16} />
+                              WhatsApp Inquiry
+                            </a>
+                            <a
+                              href={instagramLink}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-2 rounded-full border border-[#D9C8B7] bg-white px-5 py-3 text-sm font-semibold text-[#2B2B2B] transition-all duration-300 hover:bg-[#F7F1E8]"
+                            >
+                              <Instagram size={16} />
+                              Instagram Message
+                            </a>
+                            <a
+                              href={emailLink}
+                              className="inline-flex items-center gap-2 rounded-full border border-[#D9C8B7] bg-white px-5 py-3 text-sm font-semibold text-[#2B2B2B] transition-all duration-300 hover:bg-[#F7F1E8]"
+                            >
+                              <Mail size={16} />
+                              Email
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                )}
+              </>
+            )}
+          </section>
+        )}
+
+        <section className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16" id="about">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-center">
             <div>
-              <h2 className="text-3xl font-bold text-white mb-6">{siteContent.about_title}</h2>
-              <p className="text-gray-300 mb-6">
-                {siteContent.about_description}
-              </p>
-              <ul className="space-y-4">
-                <li className="flex items-start">
-                  <div className="bg-indigo-600 rounded-full p-1 mr-3 mt-1">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white">{siteContent.about_bullet_1_title}</h3>
-                    <p className="text-gray-400">{siteContent.about_bullet_1_desc}</p>
-                  </div>
-                </li>
-                <li className="flex items-start">
-                  <div className="bg-indigo-600 rounded-full p-1 mr-3 mt-1">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white">{siteContent.about_bullet_2_title}</h3>
-                    <p className="text-gray-400">{siteContent.about_bullet_2_desc}</p>
-                  </div>
-                </li>
-              </ul>
+              <p className="text-sm uppercase tracking-[0.2em] text-[#A67C52]">About Trios Art</p>
+              <h2 className="mt-3 font-heading text-[2.05rem] leading-tight sm:text-5xl">{siteContent.about_title}</h2>
+              <p className="mt-5 text-[1.02rem] leading-relaxed text-[#6B6B6B] sm:text-lg">{siteContent.about_description}</p>
             </div>
-            <div className="relative">
-              <div className="absolute -top-4 -left-4 w-24 h-24 bg-indigo-600 rounded-full opacity-20"></div>
-              <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-purple-600 rounded-full opacity-20"></div>
-
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Contact Section */}
-      <section className="py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">{siteContent.contact_title}</h2>
-            <p className="text-gray-300 mb-8">
-              {siteContent.contact_description}
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="flex flex-col items-center">
-                <div className="bg-indigo-600 rounded-full p-4 mb-4">
-                  <Mail className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="font-semibold text-white mb-2">Email</h3>
-                <p className="text-gray-300">{siteContent.contact_email}</p>
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-[#E9DDCF] bg-white p-5">
+                <h3 className="font-heading text-2xl">{siteContent.about_bullet_1_title}</h3>
+                <p className="mt-2 text-[#6B6B6B]">{siteContent.about_bullet_1_desc}</p>
               </div>
-              
-              <div className="flex flex-col items-center">
-                <div className="bg-indigo-600 rounded-full p-4 mb-4">
-                  <Phone className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="font-semibold text-white mb-2">Phone</h3>
-                <p className="text-gray-300">{siteContent.contact_phone}</p>
+              <div className="rounded-2xl border border-[#E9DDCF] bg-white p-5">
+                <h3 className="font-heading text-2xl">{siteContent.about_bullet_2_title}</h3>
+                <p className="mt-2 text-[#6B6B6B]">{siteContent.about_bullet_2_desc}</p>
               </div>
-              
-              <div className="flex flex-col items-center">
-                <div className="bg-indigo-600 rounded-full p-4 mb-4">
-                  <MapPin className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="font-semibold text-white mb-2">Location</h3>
-                <p className="text-gray-300">{siteContent.contact_location}</p>
+              <div className="rounded-2xl border border-[#E9DDCF] bg-white p-5">
+                <h3 className="font-heading text-2xl">Local Artistry, Unique Creations</h3>
+                <p className="mt-2 text-[#6B6B6B]">
+                  Every creation is intentionally unique, balancing practical use with artistic expression.
+                </p>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-8">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center mb-4 md:mb-0">
-              <Palette className="h-6 w-6 text-indigo-400" />
-              <span className="ml-2 text-lg font-bold bg-gradient-to-r from-indigo-400 to-purple-500 text-transparent bg-clip-text">
-                Trios Art
-              </span>
-            </div>
-            
-            <div className="flex space-x-6">
-              <a href={siteContent.social_facebook || '#'} className="text-gray-300 hover:text-white transition-colors">
-                <Facebook size={20} />
-              </a>
-              <a href={siteContent.social_instagram || '#'} className="text-gray-300 hover:text-white transition-colors">
-                <Instagram size={20} />
-              </a>
-              <a href={siteContent.social_twitter || '#'} className="text-gray-300 hover:text-white transition-colors">
-                <Twitter size={20} />
-              </a>
-            </div>
+        <section className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16" id="process">
+          <p className="text-sm uppercase tracking-[0.2em] text-[#A67C52]">Our Process</p>
+          <h2 className="mt-3 font-heading text-[2.05rem] leading-tight sm:text-5xl">From Idea to Hand-Finished Piece</h2>
+
+          <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-5">
+            {processSteps.map((step, index) => {
+              const Icon = step.icon;
+              return (
+                <div key={step.label} className="rounded-2xl border border-[#E9DDCF] bg-white p-5 text-center">
+                  <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[#F3E7D9] text-[#A67C52]">
+                    <Icon size={20} />
+                  </div>
+                  <p className="text-xs uppercase tracking-[0.12em] text-[#A67C52]">Step {index + 1}</p>
+                  <h3 className="mt-2 font-heading text-xl">{step.label}</h3>
+                </div>
+              );
+            })}
           </div>
-          
-          <div className="mt-6 pt-6 border-t border-gray-800 text-center">
-            <p className="text-gray-400">
-              {siteContent.footer_copyright ? siteContent.footer_copyright.replace('{}', new Date().getFullYear().toString()) : `© ${new Date().getFullYear()} Trios Art. All rights reserved.`}
-            </p>
-            <p className="text-gray-500 text-sm mt-2">
-              {siteContent.footer_description}
-            </p>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16" id="contact">
+          <div className="rounded-3xl border border-[#E9DDCF] bg-white p-8 sm:p-10">
+            <p className="text-sm uppercase tracking-[0.2em] text-[#A67C52]">Contact</p>
+            <h2 className="mt-3 font-heading text-[2.05rem] leading-tight sm:text-4xl">{siteContent.contact_title}</h2>
+            <p className="mt-4 max-w-2xl text-[1.02rem] leading-relaxed text-[#6B6B6B]">{siteContent.contact_description}</p>
+
+            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-2xl border border-[#D9C8B7] bg-[#F8F2EA] p-5 transition hover:shadow-md"
+              >
+                <MessageCircle className="mb-3 text-[#A67C52]" />
+                <h3 className="font-heading text-2xl">WhatsApp</h3>
+                <p className="mt-1 text-sm text-[#6B6B6B]">Start an inquiry instantly</p>
+              </a>
+
+              <a
+                href={instagramLink}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-2xl border border-[#E9DDCF] p-5 transition hover:shadow-md"
+              >
+                <Instagram className="mb-3 text-[#A67C52]" />
+                <h3 className="font-heading text-2xl">Instagram</h3>
+                <p className="mt-1 text-sm text-[#6B6B6B]">Message on social</p>
+              </a>
+
+              <a href={emailLink} className="rounded-2xl border border-[#E9DDCF] p-5 transition hover:shadow-md">
+                <Mail className="mb-3 text-[#A67C52]" />
+                <h3 className="font-heading text-2xl">Email</h3>
+                <p className="mt-1 text-sm text-[#6B6B6B]">{siteContent.contact_email}</p>
+              </a>
+
+              <a href={phoneLink} className="rounded-2xl border border-[#E9DDCF] p-5 transition hover:shadow-md">
+                <Phone className="mb-3 text-[#A67C52]" />
+                <h3 className="font-heading text-2xl">Phone</h3>
+                <p className="mt-1 text-sm text-[#6B6B6B]">{siteContent.contact_phone}</p>
+              </a>
+            </div>
+
+            <p className="mt-6 text-sm text-[#6B6B6B]">{siteContent.contact_location}</p>
           </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-[#E9DDCF] py-8">
+        <div className="mx-auto max-w-7xl px-5 text-center sm:px-8">
+          <p className="text-[#6B6B6B]">
+            {siteContent.footer_copyright
+              ? siteContent.footer_copyright.replace('{}', new Date().getFullYear().toString())
+              : `© ${new Date().getFullYear()} Trios Art. All rights reserved.`}
+          </p>
+          <p className="mt-2 text-sm text-[#6B6B6B]">{siteContent.footer_description}</p>
         </div>
       </footer>
-
-      {/* Product Modal */}
-      {selectedProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-6">
-                <h2 className="text-2xl font-bold text-white">{selectedProduct.name}</h2>
-                <button 
-                  onClick={closeProductModal}
-                  className="text-gray-400 hover:text-white text-2xl"
-                >
-                  ×
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <div className="h-96 rounded-lg overflow-hidden bg-white">
-                    <img 
-                      src={selectedProduct.images[selectedImageIndex] || selectedProduct.images[0]} 
-                      alt={selectedProduct.name} 
-                      className="w-full h-full object-contain p-2"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {selectedProduct.images.map((image, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => setSelectedImageIndex(index)}
-                        className={`h-20 rounded-md overflow-hidden bg-white border-2 transition-colors flex items-center justify-center ${
-                          selectedImageIndex === index ? 'border-indigo-500' : 'border-transparent hover:border-gray-500'
-                        }`}
-                      >
-                        <img 
-                          src={image} 
-                          alt={`${selectedProduct.name} ${index + 1}`} 
-                          className="w-full h-full object-contain p-1"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="space-y-6">
-                  <div>
-                    <div className="flex items-center mb-2">
-                      <span className="text-xs font-medium px-2.5 py-0.5 rounded bg-indigo-900 text-indigo-300">
-                        {selectedProduct.category.charAt(0).toUpperCase() + selectedProduct.category.slice(1)}
-                      </span>
-                      {selectedProduct.featured && (
-                        <span className="ml-2 text-xs font-medium px-2.5 py-0.5 rounded bg-amber-900 text-amber-300">
-                          Featured
-                        </span>
-                      )}
-                    </div>
-                    
-                  </div>
-
-                  <p className="text-3xl font-bold text-white">₹{selectedProduct.price.toFixed(2)}</p>
-
-                  <div className="border-t border-gray-700 pt-6">
-                    <p className="text-gray-300">{selectedProduct.description}</p>
-                  </div>
-
-                  <div className="border-t border-gray-700 pt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex flex-col items-center text-center p-4 bg-gray-700 rounded-lg">
-                        <h3 className="font-semibold text-white mb-2">Availability</h3>
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          selectedProduct.inStock 
-                            ? 'bg-green-900 text-green-300' 
-                            : 'bg-red-900 text-red-300'
-                        }`}>
-                          {selectedProduct.inStock ? 'In Stock' : 'Out of Stock'}
-                        </span>
-                      </div>
-                      <div className="flex flex-col items-center text-center p-4 bg-gray-700 rounded-lg">
-                        <h3 className="font-semibold text-white mb-2">Contact for Orders</h3>
-                        <p className="text-indigo-400 text-sm">info@triosart.com</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
