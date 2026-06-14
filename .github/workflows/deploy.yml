@@ -34,10 +34,11 @@ jobs:
 
       - name: Deploy to Public Repo
         run: |
-          git clone --depth 1 https://${{ secrets.DEPLOY_TOKEN }}@github.com/kiniv-21/trios-data.git public-repo
+          git clone --depth 1 https://x-access-token:${{ secrets.DEPLOY_TOKEN }}@github.com/kiniv-21/trios-data.git public-repo
           find public-repo -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
           cp -R dist/. public-repo/
           cd public-repo
+          git remote set-url origin https://x-access-token:${{ secrets.DEPLOY_TOKEN }}@github.com/kiniv-21/trios-data.git
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add --all
