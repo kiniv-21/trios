@@ -38,6 +38,9 @@ interface CategoryOption {
 }
 
 interface SiteContent {
+  brand_name?: string;
+  site_tab_title?: string;
+  site_meta_description?: string;
   hero_title?: string;
   hero_description?: string;
   collection_title?: string;
@@ -50,15 +53,26 @@ interface SiteContent {
   about_bullet_2_desc?: string;
   contact_title?: string;
   contact_description?: string;
+  whatsapp_number?: string;
   contact_email?: string;
   contact_phone?: string;
   contact_location?: string;
+  process_title?: string;
+  process_description?: string;
+  process_step_1?: string;
+  process_step_2?: string;
+  process_step_3?: string;
+  process_step_4?: string;
+  process_step_5?: string;
   social_instagram?: string;
   footer_copyright?: string;
   footer_description?: string;
 }
 
 const defaultSiteContent: SiteContent = {
+  brand_name: 'Trios Art',
+  site_tab_title: 'Trios Art | Hand-Painted Jute Bags',
+  site_meta_description: 'Trios Art offers unique hand-painted jute bags that combine artistic expression with sustainable fashion. Shop our collection of eco-friendly, stylish bags.',
   hero_title: 'Trios Art',
   hero_description: 'A curated studio of hand-painted and handcrafted pieces where sustainability meets local artistry.',
   collection_title: 'Collections',
@@ -71,9 +85,17 @@ const defaultSiteContent: SiteContent = {
   about_bullet_2_desc: 'Natural materials and thoughtful making processes reduce waste and elevate quality.',
   contact_title: 'Bring Your Idea to Life',
   contact_description: 'Start a conversation to commission, customize, or reserve a piece.',
+  whatsapp_number: '+91 98454 98171',
   contact_email: 'info@triosart.com',
   contact_phone: '+91 98454 98171',
   contact_location: 'Bengaluru, Karnataka, India',
+  process_title: 'From Idea to Hand-Finished Piece',
+  process_description: '',
+  process_step_1: 'Concept',
+  process_step_2: 'Design',
+  process_step_3: 'Craft',
+  process_step_4: 'Finish',
+  process_step_5: 'Deliver',
   social_instagram: '#',
   footer_copyright: '© {} Trios Art. All rights reserved.',
   footer_description: 'Handmade stories in sustainable form.',
@@ -157,14 +179,6 @@ const getProductStory = (product: Product) => ({
   customization: 'Color palette, motif style, and naming personalization available.',
 });
 
-const processSteps = [
-  { label: 'Concept', icon: Leaf },
-  { label: 'Design', icon: PenTool },
-  { label: 'Craft', icon: Scissors },
-  { label: 'Finish', icon: Sparkles },
-  { label: 'Deliver', icon: Package },
-];
-
 function App() {
   const [products, setProducts] = useState<Product[]>(staticProducts);
   const [storedCategories, setStoredCategories] = useState<CategoryOption[]>([]);
@@ -227,6 +241,18 @@ function App() {
     loadProducts();
   }, []);
 
+  useEffect(() => {
+    document.title = siteContent.site_tab_title || defaultSiteContent.site_tab_title || 'Trios Art';
+
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute(
+        'content',
+        siteContent.site_meta_description || defaultSiteContent.site_meta_description || ''
+      );
+    }
+  }, [siteContent.site_tab_title, siteContent.site_meta_description]);
+
   const mergedCategories = useMemo(() => {
     const categoryMap = new Map<string, string>();
 
@@ -278,6 +304,23 @@ function App() {
     return products.filter((p) => normalizeCategoryId(p.category) === selectedCategory.id);
   }, [products, selectedCategory]);
 
+  const processSteps = useMemo(
+    () => [
+      { label: siteContent.process_step_1 || 'Concept', icon: Leaf },
+      { label: siteContent.process_step_2 || 'Design', icon: PenTool },
+      { label: siteContent.process_step_3 || 'Craft', icon: Scissors },
+      { label: siteContent.process_step_4 || 'Finish', icon: Sparkles },
+      { label: siteContent.process_step_5 || 'Deliver', icon: Package },
+    ],
+    [
+      siteContent.process_step_1,
+      siteContent.process_step_2,
+      siteContent.process_step_3,
+      siteContent.process_step_4,
+      siteContent.process_step_5,
+    ]
+  );
+
   const openCategory = (category: CategoryOption) => {
     setSelectedCategory(category);
     setSelectedProduct(null);
@@ -312,7 +355,8 @@ function App() {
       ? `Hi Trios Art, I would like to explore ${selectedCategory.name}.`
       : 'Hi Trios Art, I would like to explore your handcrafted collections.';
 
-  const whatsappLink = `https://wa.me/919845498171?text=${encodeURIComponent(whatsappMessage)}`;
+  const whatsappNumber = (siteContent.whatsapp_number || '+91 98454 98171').replace(/\D/g, '');
+  const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
   const instagramLink = siteContent.social_instagram || '#';
   const emailLink = `mailto:${siteContent.contact_email || 'info@triosart.com'}`;
   const phoneLink = `tel:${(siteContent.contact_phone || '+919845498171').replace(/\s+/g, '')}`;
@@ -339,7 +383,7 @@ function App() {
             }}
           >
             <Palette className="h-7 w-7 text-[#A67C52]" />
-            <span className="font-heading text-2xl">Trios Art</span>
+            <span className="font-heading text-2xl">{siteContent.brand_name || 'Trios Art'}</span>
           </button>
           <a
             href={whatsappLink}
@@ -594,7 +638,10 @@ function App() {
 
         <section className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16" id="process">
           <p className="text-sm uppercase tracking-[0.2em] text-[#A67C52]">Our Process</p>
-          <h2 className="mt-3 font-heading text-[2.05rem] leading-tight sm:text-5xl">From Idea to Hand-Finished Piece</h2>
+          <h2 className="mt-3 font-heading text-[2.05rem] leading-tight sm:text-5xl">{siteContent.process_title || 'From Idea to Hand-Finished Piece'}</h2>
+          {siteContent.process_description && (
+            <p className="mt-4 max-w-3xl text-[1.02rem] leading-relaxed text-[#6B6B6B]">{siteContent.process_description}</p>
+          )}
 
           <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-5">
             {processSteps.map((step, index) => {

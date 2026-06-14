@@ -1209,10 +1209,51 @@ export function Admin() {
             </div>
 
             <div className="space-y-6">
+              {/* Browser & Brand */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Browser & Brand</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Brand Name</label>
+                    <input
+                      value={siteContentEdits.brand_name || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, brand_name: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Browser Tab Title</label>
+                    <input
+                      value={siteContentEdits.site_tab_title || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, site_tab_title: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                      placeholder="Trios Art | Hand-Painted Jute Bags"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
+                    <textarea
+                      value={siteContentEdits.site_meta_description || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, site_meta_description: e.target.value }))}
+                      rows={3}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* Hero Section */}
               <div className="border-t pt-6">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Hero Section</h3>
                 <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <input
+                      value={siteContentEdits.hero_title || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, hero_title: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                     <textarea
@@ -1336,6 +1377,15 @@ export function Admin() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp Number</label>
+                      <input
+                        value={siteContentEdits.whatsapp_number || ''}
+                        onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, whatsapp_number: e.target.value }))}
+                        className="w-full border border-gray-300 rounded px-3 py-2"
+                        placeholder="+91 98454 98171"
+                      />
+                    </div>
+                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                       <input
                         value={siteContentEdits.contact_email || ''}
@@ -1356,6 +1406,72 @@ export function Admin() {
                       <input
                         value={siteContentEdits.contact_location || ''}
                         onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_location: e.target.value }))}
+                        className="w-full border border-gray-300 rounded px-3 py-2"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Process Section */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Process Section</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <input
+                      value={siteContentEdits.process_title || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, process_title: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea
+                      value={siteContentEdits.process_description || ''}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, process_description: e.target.value }))}
+                      rows={2}
+                      className="w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Step 1</label>
+                      <input
+                        value={siteContentEdits.process_step_1 || ''}
+                        onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, process_step_1: e.target.value }))}
+                        className="w-full border border-gray-300 rounded px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Step 2</label>
+                      <input
+                        value={siteContentEdits.process_step_2 || ''}
+                        onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, process_step_2: e.target.value }))}
+                        className="w-full border border-gray-300 rounded px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Step 3</label>
+                      <input
+                        value={siteContentEdits.process_step_3 || ''}
+                        onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, process_step_3: e.target.value }))}
+                        className="w-full border border-gray-300 rounded px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Step 4</label>
+                      <input
+                        value={siteContentEdits.process_step_4 || ''}
+                        onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, process_step_4: e.target.value }))}
+                        className="w-full border border-gray-300 rounded px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Step 5</label>
+                      <input
+                        value={siteContentEdits.process_step_5 || ''}
+                        onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, process_step_5: e.target.value }))}
                         className="w-full border border-gray-300 rounded px-3 py-2"
                       />
                     </div>
