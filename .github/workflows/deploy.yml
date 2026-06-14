@@ -32,13 +32,20 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
+      - name: Checkout Public Repo
+        uses: actions/checkout@v4
+        with:
+          repository: kiniv-21/trios-data
+          token: ${{ secrets.DEPLOY_TOKEN }}
+          path: public-repo
+          ref: main
+          fetch-depth: 1
+
       - name: Deploy to Public Repo
         run: |
-          git clone --depth 1 https://kiniv-21:${{ secrets.DEPLOY_TOKEN }}@github.com/kiniv-21/trios-data.git public-repo
           find public-repo -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
           cp -R dist/. public-repo/
           cd public-repo
-          git remote set-url origin https://kiniv-21:${{ secrets.DEPLOY_TOKEN }}@github.com/kiniv-21/trios-data.git
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add --all
