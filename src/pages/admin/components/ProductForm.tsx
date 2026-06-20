@@ -123,7 +123,7 @@ export function ProductForm({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <label className="bg-gray-100 border border-gray-300 px-3 py-2 rounded cursor-pointer text-sm hover:bg-gray-200">
+          <label className={`bg-gray-100 border border-gray-300 px-3 py-2 rounded cursor-pointer text-sm hover:bg-gray-200 ${isUploadingImages || !newProductFolder ? 'opacity-50 pointer-events-none' : ''}`}>
             {isUploadingImages ? 'Uploading...' : 'Upload New Images'}
             <input
               type="file"
@@ -131,7 +131,6 @@ export function ProductForm({
               accept="image/*"
               className="hidden"
               onChange={onUploadImages}
-              disabled={isUploadingImages || !newProductFolder}
             />
           </label>
 

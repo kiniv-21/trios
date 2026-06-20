@@ -165,13 +165,12 @@ export function CategoryManager({
                       />
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <label className="text-xs bg-white border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-100 cursor-pointer">
+                      <label className={`text-xs bg-white border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-100 cursor-pointer ${isUploadingCategoryImage || isSavingCategoryChange ? 'opacity-50 pointer-events-none' : ''}`}>
                         <input
                           type="file"
                           accept="image/png,image/jpeg,image/webp,image/gif"
                           className="hidden"
                           onChange={(e) => void onUploadCategoryImage(category, e)}
-                          disabled={isUploadingCategoryImage || isSavingCategoryChange}
                         />
                         {isUploadingCategoryImage ? 'Uploading...' : 'Upload Image'}
                       </label>
