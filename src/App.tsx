@@ -186,7 +186,7 @@ const getProductStory = (product: Product) => ({
 });
 
 function App() {
-  const [products, setProducts] = useState<Product[]>(staticProducts);
+  const [products, setProducts] = useState<Product[]>(() => (supabase ? [] : staticProducts));
   const [storedCategories, setStoredCategories] = useState<CategoryOption[]>([]);
   const [siteContent, setSiteContent] = useState<SiteContent>(defaultSiteContent);
 
@@ -227,7 +227,10 @@ function App() {
 
   useEffect(() => {
     const loadProducts = async () => {
-      if (!supabase) return;
+      if (!supabase) {
+        setProducts(staticProducts);
+        return;
+      }
 
       const { data, error } = await supabase
         .from('products')
@@ -236,12 +239,11 @@ function App() {
 
       if (error) {
         console.error('Failed to load products from Supabase:', error.message);
+        setProducts([]);
         return;
       }
 
-      if (data && data.length > 0) {
-        setProducts((data as ProductRow[]).map(mapProductRow));
-      }
+      setProducts(Array.isArray(data) ? (data as ProductRow[]).map(mapProductRow) : []);
     };
 
     loadProducts();
@@ -262,9 +264,11 @@ function App() {
   const mergedCategories = useMemo(() => {
     const categoryMap = new Map<string, CategoryOption>();
 
-    for (const category of defaultCategories) {
-      if (category.id === 'all') continue;
-      categoryMap.set(category.id, { id: category.id, name: category.name });
+    if (!supabase) {
+      for (const category of defaultCategories) {
+        if (category.id === 'all') continue;
+        categoryMap.set(category.id, { id: category.id, name: category.name });
+      }
     }
 
     for (const category of storedCategories) {
@@ -419,6 +423,18 @@ function App() {
       </header>
 
       <main>
+        {supabase && mergedCategories.length === 0 && products.length === 0 ? (
+          <section className="mx-auto flex min-h-[55vh] max-w-7xl flex-col items-center justify-center px-5 text-center sm:px-8">
+            <p className="text-sm uppercase tracking-[0.2em] text-[#A67C52]">Trios Art</p>
+            <h1 className="mt-3 font-heading text-[2.35rem] leading-[1.1] sm:text-6xl">
+              No products or categories yet.
+            </h1>
+            <p className="mt-5 max-w-2xl text-[1.02rem] leading-relaxed text-[#6B6B6B] sm:text-lg">
+              Add products or create categories in the admin area to populate this storefront.
+            </p>
+          </section>
+        ) : (
+          <>
         <section className="mx-auto max-w-7xl px-5 pb-8 pt-14 sm:px-8 sm:pb-10 sm:pt-20">
           <p className="mb-4 text-sm uppercase tracking-[0.2em] text-[#A67C52]">Handmade Artisan Gallery</p>
           <h1 className="font-heading text-[2.35rem] leading-[1.1] sm:text-6xl">
@@ -732,6 +748,8 @@ function App() {
             <p className="mt-6 text-sm text-[#6B6B6B]">{siteContent.contact_location}</p>
           </div>
         </section>
+          </>
+        )}
       </main>
 
       <footer className="border-t border-[#E9DDCF] py-8">
