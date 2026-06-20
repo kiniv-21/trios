@@ -380,14 +380,11 @@ function App() {
 
   const whatsappMessage = selectedProduct
     ? [
-      isSelectedProductOutOfStock
-        ? 'Hi Trios Art, I am interested in this piece and saw that it is currently out of stock.'
-        : 'Hi Trios Art, I am interested in this piece.',
+      'Hi Trios Art, I am interested in this piece.',
       `Product: ${selectedProduct.name}`,
       `Category: ${selectedProductCategoryName}`,
       `Price: ${formatPriceINR(selectedProduct.price)}`,
       `Product ID: ${selectedProductReference}`,
-      ...(isSelectedProductOutOfStock ? ['Please notify me when this is available again.'] : []),
     ].join('\n')
     : selectedCategory
       ? `Hi Trios Art, I would like to explore ${selectedCategory.name}.`
@@ -645,38 +642,38 @@ function App() {
                           <span className="rounded-full bg-[#F1E4D6] px-4 py-2 text-xs font-semibold text-[#7F5B3A]">Customizable</span>
                         </div>
 
-                        <div className="rounded-2xl border border-[#E9DDCF] p-5">
-                          <p className="mb-4 font-heading text-2xl">
-                            {isSelectedProductOutOfStock ? 'Want to be notified when this is back?' : 'Interested in this piece?'}
-                          </p>
-                          <div className="flex flex-wrap gap-3">
-                            <a
-                              href={whatsappLink}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-2 rounded-full bg-[#A67C52] px-5 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-[#8F6843] hover:shadow-[0_10px_22px_rgba(166,124,82,0.35)]"
-                            >
-                              <MessageCircle size={16} />
-                              {isSelectedProductOutOfStock ? 'Notify Me on WhatsApp' : 'WhatsApp Inquiry'}
-                            </a>
-                            <a
-                              href={instagramLink}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-2 rounded-full border border-[#D9C8B7] bg-white px-5 py-3 text-sm font-semibold text-[#2B2B2B] transition-all duration-300 hover:bg-[#F7F1E8]"
-                            >
-                              <Instagram size={16} />
-                              Instagram Message
-                            </a>
-                            <a
-                              href={emailLink}
-                              className="inline-flex items-center gap-2 rounded-full border border-[#D9C8B7] bg-white px-5 py-3 text-sm font-semibold text-[#2B2B2B] transition-all duration-300 hover:bg-[#F7F1E8]"
-                            >
-                              <Mail size={16} />
-                              Email
-                            </a>
+                        {!isSelectedProductOutOfStock && (
+                          <div className="rounded-2xl border border-[#E9DDCF] p-5">
+                            <p className="mb-4 font-heading text-2xl">Interested in this piece?</p>
+                            <div className="flex flex-wrap gap-3">
+                              <a
+                                href={whatsappLink}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-2 rounded-full bg-[#A67C52] px-5 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-[#8F6843] hover:shadow-[0_10px_22px_rgba(166,124,82,0.35)]"
+                              >
+                                <MessageCircle size={16} />
+                                WhatsApp Inquiry
+                              </a>
+                              <a
+                                href={instagramLink}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-2 rounded-full border border-[#D9C8B7] bg-white px-5 py-3 text-sm font-semibold text-[#2B2B2B] transition-all duration-300 hover:bg-[#F7F1E8]"
+                              >
+                                <Instagram size={16} />
+                                Instagram Message
+                              </a>
+                              <a
+                                href={emailLink}
+                                className="inline-flex items-center gap-2 rounded-full border border-[#D9C8B7] bg-white px-5 py-3 text-sm font-semibold text-[#2B2B2B] transition-all duration-300 hover:bg-[#F7F1E8]"
+                              >
+                                <Mail size={16} />
+                                Email
+                              </a>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </div>
                   </article>
