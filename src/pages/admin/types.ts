@@ -4,6 +4,7 @@ export type AdminProduct = Product;
 
 export interface NewProductForm {
   name: string;
+  productCode: string;
   description: string;
   price: string;
   inStock: boolean;
@@ -13,6 +14,7 @@ export interface NewProductForm {
 
 export interface ProductEditDraft {
   name: string;
+  productCode: string;
   description: string;
   price: string;
   inStock: boolean;

@@ -42,6 +42,17 @@ export function ProductForm({
         />
       </div>
 
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Product ID</label>
+        <input
+          value={form.productCode}
+          onChange={(e) => onFormFieldChange('productCode', e.target.value.toUpperCase())}
+          className="w-full border border-gray-300 rounded px-3 py-2"
+          placeholder="e.g. TOT-001"
+        />
+        <p className="text-xs text-gray-500 mt-1">Auto-generated from category, editable before saving.</p>
+      </div>
+
       <div className="flex items-end">
         <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
           <input

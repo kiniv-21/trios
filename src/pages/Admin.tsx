@@ -14,6 +14,7 @@ import {
 
 const initialForm: NewProductForm = {
   name: '',
+  productCode: '',
   description: '',
   price: '',
   inStock: true,
@@ -32,6 +33,7 @@ const publicImagePrefix = '/storage/v1/object/public/product-images/';
 
 interface ProductRow {
   id: string;
+  product_code: string | null;
   name: string;
   price: number;
   description: string;
@@ -43,6 +45,7 @@ interface ProductRow {
 
 const mapProductRow = (row: ProductRow): AdminProduct => ({
   id: row.id,
+  productCode: row.product_code || undefined,
   name: row.name,
   price: Number(row.price || 0),
   description: row.description,
@@ -111,6 +114,23 @@ const formatCategoryName = (id: string) =>
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+
+const getCategoryCodePrefix = (categoryId: string) => {
+  const normalized = normalizeCategoryId(categoryId);
+  if (!normalized) return 'PRD';
+
+  const lettersOnly = normalized.replace(/[^a-z]/g, '').toUpperCase();
+  return (lettersOnly.slice(0, 3) || 'PRD').padEnd(3, 'X');
+};
+
+const parseCodeSequence = (code: string, prefix: string) => {
+  const regex = new RegExp(`^${prefix}-(\\d+)$`, 'i');
+  const match = code.trim().toUpperCase().match(regex);
+  if (!match) return null;
+
+  const value = Number(match[1]);
+  return Number.isInteger(value) && value > 0 ? value : null;
+};
 
 const parseStoredCategories = (rawValue?: string): CategoryOption[] => {
   if (!rawValue) return [];
@@ -236,6 +256,34 @@ export function Admin() {
     );
   };
 
+  const generateNextProductCode = (categoryId: string, excludeProductId?: string) => {
+    const prefix = getCategoryCodePrefix(categoryId);
+    const used = new Set<number>();
+
+    for (const product of products) {
+      if (excludeProductId && product.id === excludeProductId) continue;
+      if (normalizeCategoryId(product.category) !== normalizeCategoryId(categoryId)) continue;
+      if (!product.productCode) continue;
+
+      const sequence = parseCodeSequence(product.productCode, prefix);
+      if (sequence) used.add(sequence);
+    }
+
+    let next = 1;
+    while (used.has(next)) next += 1;
+    return `${prefix}-${String(next).padStart(3, '0')}`;
+  };
+
+  const isProductCodeTaken = (code: string, excludeProductId?: string) => {
+    const normalized = code.trim().toUpperCase();
+    if (!normalized) return false;
+
+    return products.some((product) => {
+      if (excludeProductId && product.id === excludeProductId) return false;
+      return (product.productCode || '').trim().toUpperCase() === normalized;
+    });
+  };
+
   const getProductsUsingCategoryCount = (categoryId: string) => {
     return products.reduce((count, product) => {
       return count + (normalizeCategoryId(product.category) === categoryId ? 1 : 0);
@@ -348,7 +396,7 @@ export function Admin() {
       setIsLoadingProducts(true);
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, price, description, images, category, featured, in_stock')
+        .select('id, product_code, name, price, description, images, category, featured, in_stock')
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -397,6 +445,7 @@ export function Admin() {
     setForm((prev) => ({
       ...prev,
       category: categoryOptions[0].id,
+      productCode: generateNextProductCode(categoryOptions[0].id),
     }));
   }, [categoryOptions, form.category]);
 
@@ -406,6 +455,7 @@ export function Admin() {
       for (const product of products) {
         next[product.id] = prev[product.id] || {
           name: product.name,
+          productCode: product.productCode || '',
           description: product.description,
           price: String(product.price),
           inStock: product.inStock,
@@ -415,6 +465,15 @@ export function Admin() {
       return next;
     });
   }, [products]);
+
+  useEffect(() => {
+    if (!form.productCode.trim()) {
+      setForm((prev) => ({
+        ...prev,
+        productCode: generateNextProductCode(prev.category),
+      }));
+    }
+  }, [form.productCode, form.category, products]);
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -445,8 +504,13 @@ export function Admin() {
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.name.trim() || !form.description.trim() || !form.price.trim() || form.images.length === 0) {
-      setMessage('Title, description, price, and at least one image are required.');
+    if (!form.name.trim() || !form.productCode.trim() || !form.description.trim() || !form.price.trim() || form.images.length === 0) {
+      setMessage('Title, product ID, description, price, and at least one image are required.');
+      return;
+    }
+
+    if (isProductCodeTaken(form.productCode)) {
+      setMessage('Product ID already exists. Use a unique value.');
       return;
     }
 
@@ -463,6 +527,7 @@ export function Admin() {
 
     const payload = {
       name: form.name.trim(),
+      product_code: form.productCode.trim().toUpperCase(),
       description: form.description.trim(),
       in_stock: form.inStock,
       price: parsedPrice,
@@ -474,7 +539,7 @@ export function Admin() {
     const { data, error } = await supabase
       .from('products')
       .insert(payload)
-      .select('id, name, price, description, images, category, featured, in_stock')
+      .select('id, product_code, name, price, description, images, category, featured, in_stock')
       .single();
 
     if (error) {
@@ -604,7 +669,19 @@ export function Admin() {
     field: K,
     value: NewProductForm[K]
   ) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+
+      if (field === 'category') {
+        next.productCode = generateNextProductCode(String(value));
+      }
+
+      if (field === 'productCode') {
+        next.productCode = String(value).toUpperCase();
+      }
+
+      return next;
+    });
   };
 
   const updateProductImages = (productId: string, nextImages: string[]) => {
@@ -901,17 +978,50 @@ export function Admin() {
 
   const updateProductField = (
     id: string,
-    field: 'name' | 'description' | 'price' | 'inStock' | 'category',
+    field: 'name' | 'productCode' | 'description' | 'price' | 'inStock' | 'category',
     value: string | boolean,
   ) => {
     setProductEdits((prev) => {
-      const current = prev[id] || { name: '', description: '', price: '', inStock: true, category: 'totes' };
+      const baseProduct = products.find((product) => product.id === id);
+      const current = prev[id] || {
+        name: baseProduct?.name || '',
+        productCode: baseProduct?.productCode || '',
+        description: baseProduct?.description || '',
+        price: baseProduct ? String(baseProduct.price) : '',
+        inStock: baseProduct?.inStock ?? true,
+        category: baseProduct?.category || 'totes',
+      };
+
+      const nextDraft: ProductEditDraft = {
+        ...current,
+        name: current.name,
+        productCode: current.productCode,
+        description: current.description,
+        price: current.price,
+        inStock: current.inStock,
+        category: current.category,
+      };
+
+      if (field === 'name' || field === 'productCode' || field === 'description' || field === 'price' || field === 'category') {
+        nextDraft[field] = String(value);
+      }
+
+      if (field === 'inStock') {
+        nextDraft.inStock = Boolean(value);
+      }
+
+      if (field === 'category') {
+        nextDraft.category = String(value);
+        nextDraft.productCode = generateNextProductCode(String(value), id);
+      }
+
+      if (field === 'productCode') {
+        nextDraft.productCode = String(value).toUpperCase();
+      }
+
       return {
         ...prev,
-        [id]: {
-          ...current,
-          [field]: value,
-        },
+        [id]: nextDraft,
       };
     });
   };
@@ -921,6 +1031,7 @@ export function Admin() {
     if (!draft) return false;
     return (
       draft.name !== product.name
+      || (draft.productCode || '') !== (product.productCode || '')
       || draft.description !== product.description
       || Number(draft.price) !== product.price
       || draft.inStock !== product.inStock
@@ -933,11 +1044,17 @@ export function Admin() {
     if (!draft) return;
 
     const trimmedName = draft.name.trim();
+    const trimmedProductCode = draft.productCode.trim().toUpperCase();
     const trimmedDescription = draft.description.trim();
     const parsedPrice = Number(draft.price);
 
-    if (!trimmedName || !trimmedDescription || !draft.price.trim()) {
-      setMessage('Existing product title, description, and price cannot be empty.');
+    if (!trimmedName || !trimmedProductCode || !trimmedDescription || !draft.price.trim()) {
+      setMessage('Existing product title, product ID, description, and price cannot be empty.');
+      return;
+    }
+
+    if (isProductCodeTaken(trimmedProductCode, product.id)) {
+      setMessage('Product ID already exists. Use a unique value.');
       return;
     }
 
@@ -949,6 +1066,7 @@ export function Admin() {
     const nextProduct = {
       ...product,
       name: trimmedName,
+      productCode: trimmedProductCode,
       description: trimmedDescription,
       price: parsedPrice,
       inStock: draft.inStock,
@@ -960,6 +1078,7 @@ export function Admin() {
       ...prev,
       [product.id]: {
         name: trimmedName,
+        productCode: trimmedProductCode,
         description: trimmedDescription,
         price: String(parsedPrice),
         inStock: draft.inStock,
@@ -976,6 +1095,7 @@ export function Admin() {
       .from('products')
       .update({
         name: trimmedName,
+        product_code: trimmedProductCode,
         description: trimmedDescription,
         price: parsedPrice,
         in_stock: draft.inStock,

@@ -13,7 +13,7 @@ interface ProductListProps {
   hasProductEditChanges: (product: AdminProduct) => boolean;
   updateProductField: (
     id: string,
-    field: 'name' | 'description' | 'price' | 'inStock' | 'category',
+    field: 'name' | 'productCode' | 'description' | 'price' | 'inStock' | 'category',
     value: string | boolean,
   ) => void;
   onDoneExistingProduct: (product: AdminProduct) => Promise<void>;
@@ -67,6 +67,15 @@ export function ProductList({
                 <input
                   value={productEdits[product.id]?.name ?? product.name}
                   onChange={(e) => updateProductField(product.id, 'name', e.target.value)}
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Product ID</label>
+                <input
+                  value={productEdits[product.id]?.productCode ?? product.productCode ?? ''}
+                  onChange={(e) => updateProductField(product.id, 'productCode', e.target.value.toUpperCase())}
                   className="w-full border border-gray-300 rounded px-3 py-2"
                 />
               </div>
@@ -143,6 +152,9 @@ export function ProductList({
               </div>
 
               <div className="md:col-span-2">
+                <p className="text-xs text-gray-500 mb-2">
+                  Internal DB ID: <span className="font-medium text-gray-700">{product.id}</span>
+                </p>
                 <p className="text-xs text-gray-500">
                   Supabase Folder: <span className="font-medium text-gray-700">{getProductFolder(product)}</span>
                 </p>

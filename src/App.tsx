@@ -23,6 +23,7 @@ const supabase = supabaseUrl && supabaseAnonKey
 
 interface ProductRow {
   id: string;
+  product_code: string | null;
   name: string;
   price: number;
   description: string;
@@ -104,6 +105,7 @@ const defaultSiteContent: SiteContent = {
 
 const mapProductRow = (row: ProductRow): Product => ({
   id: row.id,
+  productCode: row.product_code || undefined,
   name: row.name,
   price: Number(row.price || 0),
   description: row.description,
@@ -229,7 +231,7 @@ function App() {
 
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, price, description, images, category, featured, in_stock')
+        .select('id, product_code, name, price, description, images, category, featured, in_stock')
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -357,8 +359,20 @@ function App() {
     });
   };
 
+  const selectedProductCategoryName = selectedProduct
+    ? mergedCategories.find((category) => category.id === normalizeCategoryId(selectedProduct.category))?.name
+      || formatCategoryName(normalizeCategoryId(selectedProduct.category))
+    : '';
+
+  const selectedProductReference = selectedProduct?.productCode || selectedProduct?.id || '';
+
   const whatsappMessage = selectedProduct
-    ? `Hi Trios Art, I am interested in this piece: ${selectedProduct.name}.`
+    ? [
+      'Hi Trios Art, I am interested in this piece.',
+      `Product: ${selectedProduct.name}`,
+      `Category: ${selectedProductCategoryName}`,
+      `Product ID: ${selectedProductReference}`,
+    ].join('\n')
     : selectedCategory
       ? `Hi Trios Art, I would like to explore ${selectedCategory.name}.`
       : 'Hi Trios Art, I would like to explore your handcrafted collections.';
@@ -511,6 +525,9 @@ function App() {
                       </div>
                       <div className="p-5 sm:p-6">
                         <h3 className="font-heading text-[1.6rem] leading-tight sm:text-2xl">{product.name}</h3>
+                        <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#A67C52]">
+                          Product ID: {product.productCode || product.id}
+                        </p>
                         <p className="mt-2 line-clamp-2 text-[0.95rem] leading-relaxed text-[#6B6B6B] sm:text-sm">{product.description}</p>
                       </div>
                     </button>
@@ -554,6 +571,9 @@ function App() {
                         <div>
                           <p className="text-sm uppercase tracking-[0.2em] text-[#A67C52]">Product Story</p>
                           <h3 className="mt-2 font-heading text-[2.05rem] leading-tight sm:text-4xl">{selectedProduct.name}</h3>
+                          <p className="mt-2 text-xs uppercase tracking-[0.12em] text-[#A67C52]">
+                            Product ID: {selectedProduct.productCode || selectedProduct.id}
+                          </p>
                         </div>
 
                         <p className="text-[1.02rem] leading-relaxed text-[#6B6B6B] sm:text-base">{getProductStory(selectedProduct).shortStory}</p>
