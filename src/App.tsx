@@ -435,7 +435,7 @@ function App() {
           </section>
         ) : (
           <>
-        <section className="mx-auto max-w-7xl px-5 pb-8 pt-14 sm:px-8 sm:pb-10 sm:pt-20">
+          <section className="mx-auto max-w-7xl px-5 pb-8 pt-14 sm:px-8 sm:pb-10 sm:pt-20">
           <p className="mb-4 text-sm uppercase tracking-[0.2em] text-[#A67C52]">Handmade Artisan Gallery</p>
           <h1 className="font-heading text-[2.35rem] leading-[1.1] sm:text-6xl">
             {siteContent.hero_title || 'Crafted Stories, Not Catalog Listings'}
@@ -653,6 +653,8 @@ function App() {
             )}
           </section>
         )}
+          </>
+        )}
 
         <section className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16" id="about">
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-center">
@@ -748,8 +750,7 @@ function App() {
             <p className="mt-6 text-sm text-[#6B6B6B]">{siteContent.contact_location}</p>
           </div>
         </section>
-          </>
-        )}
+
       </main>
 
       <footer className="border-t border-[#E9DDCF] py-8">
