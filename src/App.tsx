@@ -376,14 +376,18 @@ function App() {
     : '';
 
   const selectedProductReference = selectedProduct?.productCode || selectedProduct?.id || '';
+  const isSelectedProductOutOfStock = Boolean(selectedProduct && !selectedProduct.inStock);
 
   const whatsappMessage = selectedProduct
     ? [
-      'Hi Trios Art, I am interested in this piece.',
+      isSelectedProductOutOfStock
+        ? 'Hi Trios Art, I am interested in this piece and saw that it is currently out of stock.'
+        : 'Hi Trios Art, I am interested in this piece.',
       `Product: ${selectedProduct.name}`,
       `Category: ${selectedProductCategoryName}`,
       `Price: ${formatPriceINR(selectedProduct.price)}`,
       `Product ID: ${selectedProductReference}`,
+      ...(isSelectedProductOutOfStock ? ['Please notify me when this is available again.'] : []),
     ].join('\n')
     : selectedCategory
       ? `Hi Trios Art, I would like to explore ${selectedCategory.name}.`
@@ -540,7 +544,12 @@ function App() {
                         transition: `opacity 420ms ease ${index * 55}ms, transform 420ms ease ${index * 55}ms`,
                       }}
                     >
-                      <div className="h-64 bg-[#F7F1E8] p-3">
+                      <div className="relative h-64 bg-[#F7F1E8] p-3">
+                        {!product.inStock && (
+                          <span className="absolute left-4 top-4 z-10 rounded-full border border-[#D9C8B7] bg-[#F4E9DC] px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[#8F6843]">
+                            Out of Stock
+                          </span>
+                        )}
                         <img
                           src={product.images[0]}
                           alt={product.name}
@@ -550,6 +559,9 @@ function App() {
                       <div className="p-5 sm:p-6">
                         <h3 className="font-heading text-[1.6rem] leading-tight sm:text-2xl">{product.name}</h3>
                         <p className="mt-2 text-sm font-semibold text-[#2B2B2B]">{formatPriceINR(product.price)}</p>
+                        {!product.inStock && (
+                          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.08em] text-[#8F6843]">Out of Stock</p>
+                        )}
                         <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#A67C52]">
                           Product ID: {product.productCode || product.id}
                         </p>
@@ -568,7 +580,12 @@ function App() {
                   >
                     <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
                         <div className="space-y-4">
-                        <div className="flex h-[420px] items-center justify-center rounded-2xl bg-[#F7F1E8] p-4">
+                        <div className="relative flex h-[420px] items-center justify-center rounded-2xl bg-[#F7F1E8] p-4">
+                          {!selectedProduct.inStock && (
+                            <span className="absolute left-4 top-4 rounded-full border border-[#D9C8B7] bg-[#F4E9DC] px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-[#8F6843]">
+                              Out of Stock
+                            </span>
+                          )}
                           <img
                             src={selectedProduct.images[selectedImageIndex] || selectedProduct.images[0]}
                             alt={selectedProduct.name}
@@ -597,6 +614,9 @@ function App() {
                           <p className="text-sm uppercase tracking-[0.2em] text-[#A67C52]">Product Story</p>
                           <h3 className="mt-2 font-heading text-[2.05rem] leading-tight sm:text-4xl">{selectedProduct.name}</h3>
                           <p className="mt-2 text-xl font-semibold text-[#2B2B2B]">{formatPriceINR(selectedProduct.price)}</p>
+                          {!selectedProduct.inStock && (
+                            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.08em] text-[#8F6843]">Out of Stock</p>
+                          )}
                           <p className="mt-2 text-xs uppercase tracking-[0.12em] text-[#A67C52]">
                             Product ID: {selectedProduct.productCode || selectedProduct.id}
                           </p>
@@ -626,7 +646,9 @@ function App() {
                         </div>
 
                         <div className="rounded-2xl border border-[#E9DDCF] p-5">
-                          <p className="mb-4 font-heading text-2xl">Interested in this piece?</p>
+                          <p className="mb-4 font-heading text-2xl">
+                            {isSelectedProductOutOfStock ? 'Want to be notified when this is back?' : 'Interested in this piece?'}
+                          </p>
                           <div className="flex flex-wrap gap-3">
                             <a
                               href={whatsappLink}
@@ -635,7 +657,7 @@ function App() {
                               className="inline-flex items-center gap-2 rounded-full bg-[#A67C52] px-5 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-[#8F6843] hover:shadow-[0_10px_22px_rgba(166,124,82,0.35)]"
                             >
                               <MessageCircle size={16} />
-                              WhatsApp Inquiry
+                              {isSelectedProductOutOfStock ? 'Notify Me on WhatsApp' : 'WhatsApp Inquiry'}
                             </a>
                             <a
                               href={instagramLink}
