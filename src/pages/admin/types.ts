@@ -22,4 +22,5 @@ export interface ProductEditDraft {
 export interface CategoryOption {
   id: string;
   name: string;
+  coverImage?: string;
 }

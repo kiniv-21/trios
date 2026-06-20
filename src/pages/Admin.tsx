@@ -113,7 +113,10 @@ const parseStoredCategories = (rawValue?: string): CategoryOption[] => {
           const name = typeof item.name === 'string' && item.name.trim()
             ? item.name.trim()
             : formatCategoryName(id);
-          return { id, name };
+          const coverImage = typeof item.coverImage === 'string' && item.coverImage.trim()
+            ? item.coverImage.trim()
+            : undefined;
+          return { id, name, coverImage };
         }
 
         return null;
@@ -166,6 +169,8 @@ export function Admin() {
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState('');
   const [editingCategorySlug, setEditingCategorySlug] = useState('');
+  const [editingCategoryCoverImage, setEditingCategoryCoverImage] = useState('');
+  const [isUploadingCategoryImage, setIsUploadingCategoryImage] = useState(false);
   const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null);
   const [deleteReplacementCategoryId, setDeleteReplacementCategoryId] = useState('');
 
@@ -176,29 +181,39 @@ export function Admin() {
   }, [products]);
 
   const categoryOptions = useMemo(() => {
-    const categoryMap = new Map<string, string>();
+    const categoryMap = new Map<string, CategoryOption>();
 
     for (const category of defaultCategories) {
       if (category.id === 'all') continue;
-      categoryMap.set(category.id, category.name);
+      categoryMap.set(category.id, { id: category.id, name: category.name });
     }
 
     for (const category of customCategories) {
-      categoryMap.set(category.id, category.name);
+      categoryMap.set(category.id, category);
     }
 
     for (const product of products) {
       const id = normalizeCategoryId(product.category);
       if (!id || id === 'all') continue;
       if (!categoryMap.has(id)) {
-        categoryMap.set(id, formatCategoryName(id));
+        categoryMap.set(id, { id, name: formatCategoryName(id) });
       }
     }
 
-    return Array.from(categoryMap.entries())
-      .map(([id, name]) => ({ id, name }))
+    return Array.from(categoryMap.values())
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [customCategories, products]);
+
+  const getCategoryProductImages = (categoryId: string) => {
+    return Array.from(
+      new Set(
+        products
+          .filter((product) => normalizeCategoryId(product.category) === categoryId)
+          .flatMap((product) => product.images)
+          .filter(Boolean)
+      )
+    );
+  };
 
   const getProductsUsingCategoryCount = (categoryId: string) => {
     return products.reduce((count, product) => {
@@ -946,6 +961,7 @@ export function Admin() {
     setEditingCategoryId(category.id);
     setEditingCategoryName(category.name);
     setEditingCategorySlug(category.id);
+    setEditingCategoryCoverImage(category.coverImage || '');
     setDeletingCategoryId(null);
     setDeleteReplacementCategoryId('');
     setMessage('');
@@ -955,6 +971,48 @@ export function Admin() {
     setEditingCategoryId(null);
     setEditingCategoryName('');
     setEditingCategorySlug('');
+    setEditingCategoryCoverImage('');
+  };
+
+  const handleUploadCategoryImage = async (category: CategoryOption, e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    if (!supabase) {
+      setMessage('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+      return;
+    }
+
+    const file = files[0];
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setMessage(validationError);
+      e.target.value = '';
+      return;
+    }
+
+    setIsUploadingCategoryImage(true);
+    setMessage('');
+
+    try {
+      const safeName = sanitizeFileName(file.name);
+      const filePath = `category-covers/${category.id}/${Date.now()}-${safeName}`;
+      const { error } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file, { upsert: false });
+
+      if (error) {
+        setMessage(`Failed to upload category image: ${error.message}`);
+        return;
+      }
+
+      const { data } = supabase.storage.from('product-images').getPublicUrl(filePath);
+      setEditingCategoryCoverImage(data.publicUrl);
+      setMessage('Category thumbnail uploaded. Save category to apply it.');
+    } finally {
+      setIsUploadingCategoryImage(false);
+      e.target.value = '';
+    }
   };
 
   const handleSaveCategoryEdit = async (category: CategoryOption) => {
@@ -977,7 +1035,11 @@ export function Admin() {
       return;
     }
 
-    const editedCategory: CategoryOption = { id: nextId, name: trimmedName };
+    const editedCategory: CategoryOption = {
+      id: nextId,
+      name: trimmedName,
+      coverImage: editingCategoryCoverImage.trim() || undefined,
+    };
     const nextCustomCategories = [
       ...customCategories.filter((item) => item.id !== category.id),
       editedCategory,
@@ -1010,6 +1072,7 @@ export function Admin() {
       setEditingCategoryId(null);
       setEditingCategoryName('');
       setEditingCategorySlug('');
+      setEditingCategoryCoverImage('');
       setMessage(`Category "${trimmedName}" updated.`);
     } finally {
       setIsSavingCategoryChange(false);
@@ -1022,6 +1085,7 @@ export function Admin() {
     setEditingCategoryId(null);
     setEditingCategoryName('');
     setEditingCategorySlug('');
+    setEditingCategoryCoverImage('');
     setMessage('');
   };
 
@@ -1575,6 +1639,11 @@ export function Admin() {
                 onCancelCategoryEdit={cancelCategoryEdit}
                 onEditingCategoryNameChange={setEditingCategoryName}
                 onEditingCategorySlugChange={setEditingCategorySlug}
+                editingCategoryCoverImage={editingCategoryCoverImage}
+                isUploadingCategoryImage={isUploadingCategoryImage}
+                getCategoryProductImages={getCategoryProductImages}
+                onEditingCategoryCoverImageChange={setEditingCategoryCoverImage}
+                onUploadCategoryImage={handleUploadCategoryImage}
                 onSaveCategoryEdit={handleSaveCategoryEdit}
                 onStartCategoryDelete={startCategoryDelete}
                 onCancelCategoryDelete={cancelCategoryDelete}

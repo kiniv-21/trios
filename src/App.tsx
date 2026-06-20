@@ -35,6 +35,7 @@ interface ProductRow {
 interface CategoryOption {
   id: string;
   name: string;
+  coverImage?: string;
 }
 
 interface SiteContent {
@@ -148,7 +149,10 @@ const parseStoredCategories = (rawValue?: string): CategoryOption[] => {
           const name = typeof item.name === 'string' && item.name.trim()
             ? item.name.trim()
             : formatCategoryName(id);
-          return { id, name };
+          const coverImage = typeof item.coverImage === 'string' && item.coverImage.trim()
+            ? item.coverImage.trim()
+            : undefined;
+          return { id, name, coverImage };
         }
 
         return null;
@@ -254,27 +258,26 @@ function App() {
   }, [siteContent.site_tab_title, siteContent.site_meta_description]);
 
   const mergedCategories = useMemo(() => {
-    const categoryMap = new Map<string, string>();
+    const categoryMap = new Map<string, CategoryOption>();
 
     for (const category of defaultCategories) {
       if (category.id === 'all') continue;
-      categoryMap.set(category.id, category.name);
+      categoryMap.set(category.id, { id: category.id, name: category.name });
     }
 
     for (const category of storedCategories) {
-      categoryMap.set(category.id, category.name);
+      categoryMap.set(category.id, category);
     }
 
     for (const product of products) {
       const id = normalizeCategoryId(product.category);
       if (!id || id === 'all') continue;
       if (!categoryMap.has(id)) {
-        categoryMap.set(id, formatCategoryName(id));
+        categoryMap.set(id, { id, name: formatCategoryName(id) });
       }
     }
 
-    return Array.from(categoryMap.entries())
-      .map(([id, name]) => ({ id, name }))
+    return Array.from(categoryMap.values())
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [products, storedCategories]);
 
@@ -282,6 +285,11 @@ function App() {
     const map: Record<string, string> = {};
 
     for (const category of mergedCategories) {
+      if (category.coverImage) {
+        map[category.id] = category.coverImage;
+        continue;
+      }
+
       const first = products.find((p) => normalizeCategoryId(p.category) === category.id);
       if (first && first.images[0]) map[category.id] = first.images[0];
     }
