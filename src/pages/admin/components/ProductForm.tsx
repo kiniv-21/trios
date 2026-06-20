@@ -2,6 +2,7 @@ import { CategoryOption, NewProductForm } from '../types';
 
 interface ProductFormProps {
   form: NewProductForm;
+  suggestedProductCode: string;
   categoryOptions: CategoryOption[];
   newProductFolder: string;
   isUploadingImages: boolean;
@@ -19,6 +20,7 @@ interface ProductFormProps {
 
 export function ProductForm({
   form,
+  suggestedProductCode,
   categoryOptions,
   newProductFolder,
   isUploadingImages,
@@ -45,7 +47,7 @@ export function ProductForm({
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Product ID</label>
         <input
-          value={form.productCode}
+          value={form.productCode || suggestedProductCode}
           onChange={(e) => onFormFieldChange('productCode', e.target.value.toUpperCase())}
           className="w-full border border-gray-300 rounded px-3 py-2"
           placeholder="e.g. TOT-001"

@@ -504,12 +504,14 @@ export function Admin() {
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.name.trim() || !form.productCode.trim() || !form.description.trim() || !form.price.trim() || form.images.length === 0) {
+    const effectiveProductCode = (form.productCode.trim() || generateNextProductCode(form.category)).toUpperCase();
+
+    if (!form.name.trim() || !effectiveProductCode || !form.description.trim() || !form.price.trim() || form.images.length === 0) {
       setMessage('Title, product ID, description, price, and at least one image are required.');
       return;
     }
 
-    if (isProductCodeTaken(form.productCode)) {
+    if (isProductCodeTaken(effectiveProductCode)) {
       setMessage('Product ID already exists. Use a unique value.');
       return;
     }
@@ -527,7 +529,7 @@ export function Admin() {
 
     const payload = {
       name: form.name.trim(),
-      product_code: form.productCode.trim().toUpperCase(),
+      product_code: effectiveProductCode,
       description: form.description.trim(),
       in_stock: form.inStock,
       price: parsedPrice,
@@ -1927,6 +1929,7 @@ export function Admin() {
 
               <ProductForm
                 form={form}
+                suggestedProductCode={generateNextProductCode(form.category)}
                 categoryOptions={categoryOptions}
                 newProductFolder={newProductFolder}
                 isUploadingImages={isUploadingImages}
