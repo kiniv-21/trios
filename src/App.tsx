@@ -544,7 +544,7 @@ function App() {
                       <div className="relative h-64 bg-[#F7F1E8] p-3">
                         {!product.inStock && (
                           <span className="absolute left-4 top-4 z-10 rounded-full border border-[#D9C8B7] bg-[#F4E9DC] px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[#8F6843]">
-                            Out of Stock
+                            Sold Out
                           </span>
                         )}
                         <img
@@ -557,7 +557,7 @@ function App() {
                         <h3 className="font-heading text-[1.6rem] leading-tight sm:text-2xl">{product.name}</h3>
                         <p className="mt-2 text-sm font-semibold text-[#2B2B2B]">{formatPriceINR(product.price)}</p>
                         {!product.inStock && (
-                          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.08em] text-[#8F6843]">Out of Stock</p>
+                          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.08em] text-[#8F6843]">Sold Out</p>
                         )}
                         <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#A67C52]">
                           Product ID: {product.productCode || product.id}
@@ -580,7 +580,7 @@ function App() {
                         <div className="relative flex h-[420px] items-center justify-center rounded-2xl bg-[#F7F1E8] p-4">
                           {!selectedProduct.inStock && (
                             <span className="absolute left-4 top-4 rounded-full border border-[#D9C8B7] bg-[#F4E9DC] px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-[#8F6843]">
-                              Out of Stock
+                              Sold Out
                             </span>
                           )}
                           <img
@@ -612,7 +612,7 @@ function App() {
                           <h3 className="mt-2 font-heading text-[2.05rem] leading-tight sm:text-4xl">{selectedProduct.name}</h3>
                           <p className="mt-2 text-xl font-semibold text-[#2B2B2B]">{formatPriceINR(selectedProduct.price)}</p>
                           {!selectedProduct.inStock && (
-                            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.08em] text-[#8F6843]">Out of Stock</p>
+                            <p className="mt-1 text-xs font-semibold uppercase tracking-[0.08em] text-[#8F6843]">Sold Out</p>
                           )}
                           <p className="mt-2 text-xs uppercase tracking-[0.12em] text-[#A67C52]">
                             Product ID: {selectedProduct.productCode || selectedProduct.id}
