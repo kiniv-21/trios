@@ -130,6 +130,13 @@ const formatCategoryName = (id: string) =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 
+const formatPriceINR = (price: number) =>
+  new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(Number.isFinite(price) ? price : 0);
+
 const parseStoredCategories = (rawValue?: string): CategoryOption[] => {
   if (!rawValue) return [];
 
@@ -375,6 +382,7 @@ function App() {
       'Hi Trios Art, I am interested in this piece.',
       `Product: ${selectedProduct.name}`,
       `Category: ${selectedProductCategoryName}`,
+      `Price: ${formatPriceINR(selectedProduct.price)}`,
       `Product ID: ${selectedProductReference}`,
     ].join('\n')
     : selectedCategory
@@ -541,6 +549,7 @@ function App() {
                       </div>
                       <div className="p-5 sm:p-6">
                         <h3 className="font-heading text-[1.6rem] leading-tight sm:text-2xl">{product.name}</h3>
+                        <p className="mt-2 text-sm font-semibold text-[#2B2B2B]">{formatPriceINR(product.price)}</p>
                         <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#A67C52]">
                           Product ID: {product.productCode || product.id}
                         </p>
@@ -587,6 +596,7 @@ function App() {
                         <div>
                           <p className="text-sm uppercase tracking-[0.2em] text-[#A67C52]">Product Story</p>
                           <h3 className="mt-2 font-heading text-[2.05rem] leading-tight sm:text-4xl">{selectedProduct.name}</h3>
+                          <p className="mt-2 text-xl font-semibold text-[#2B2B2B]">{formatPriceINR(selectedProduct.price)}</p>
                           <p className="mt-2 text-xs uppercase tracking-[0.12em] text-[#A67C52]">
                             Product ID: {selectedProduct.productCode || selectedProduct.id}
                           </p>

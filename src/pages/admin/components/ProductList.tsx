@@ -1,6 +1,13 @@
 import { ImageManager } from './ImageManager';
 import { AdminProduct, CategoryOption, ProductEditDraft } from '../types';
 
+const formatPriceINR = (price: number) =>
+  new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(Number.isFinite(price) ? price : 0);
+
 interface ProductListProps {
   isLoadingProducts: boolean;
   sortedProducts: AdminProduct[];
@@ -53,6 +60,9 @@ export function ProductList({
       <div className="space-y-4">
         {sortedProducts.map((product) => (
           <div key={product.id} className="border border-gray-200 rounded p-4">
+            <p className="mb-3 text-sm font-semibold text-gray-800">
+              Current Price: {formatPriceINR(product.price)}
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {hasProductEditChanges(product) && (
                 <div className="md:col-span-2">

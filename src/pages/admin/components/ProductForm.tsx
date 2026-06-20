@@ -1,5 +1,12 @@
 import { CategoryOption, NewProductForm } from '../types';
 
+const formatPriceINR = (price: number) =>
+  new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(Number.isFinite(price) ? price : 0);
+
 interface ProductFormProps {
   form: NewProductForm;
   suggestedProductCode: string;
@@ -32,6 +39,8 @@ export function ProductForm({
   onLoadFolderImages,
   onToggleSelectedImage,
 }: ProductFormProps) {
+  const parsedPrice = Number(form.price);
+
   return (
     <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
@@ -78,6 +87,9 @@ export function ProductForm({
           className="w-full border border-gray-300 rounded px-3 py-2"
           placeholder="Enter product price"
         />
+        <p className="text-xs text-gray-500 mt-1">
+          Display Price: {formatPriceINR(Number.isFinite(parsedPrice) ? parsedPrice : 0)}
+        </p>
       </div>
 
       <div>
