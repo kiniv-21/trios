@@ -4,6 +4,7 @@ import { AdminProduct, CategoryOption, ProductEditDraft } from '../types';
 interface ProductListProps {
   isLoadingProducts: boolean;
   sortedProducts: AdminProduct[];
+  deletingProductId: string | null;
   productEdits: Record<string, ProductEditDraft>;
   categoryOptions: CategoryOption[];
   existingFolderImages: Record<string, string[]>;
@@ -16,6 +17,7 @@ interface ProductListProps {
     value: string | boolean,
   ) => void;
   onDoneExistingProduct: (product: AdminProduct) => Promise<void>;
+  onDeleteProduct: (product: AdminProduct) => Promise<void>;
   getProductFolder: (product: AdminProduct) => string;
   onUploadExistingProductImages: (product: AdminProduct, e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   onLoadExistingFolderImages: (product: AdminProduct) => Promise<void>;
@@ -27,6 +29,7 @@ interface ProductListProps {
 export function ProductList({
   isLoadingProducts,
   sortedProducts,
+  deletingProductId,
   productEdits,
   categoryOptions,
   existingFolderImages,
@@ -35,6 +38,7 @@ export function ProductList({
   hasProductEditChanges,
   updateProductField,
   onDoneExistingProduct,
+  onDeleteProduct,
   getProductFolder,
   onUploadExistingProductImages,
   onLoadExistingFolderImages,
@@ -117,14 +121,25 @@ export function ProductList({
               </div>
 
               <div className="md:col-span-2 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => onDoneExistingProduct(product)}
-                  disabled={!hasProductEditChanges(product)}
-                  className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Done
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onDeleteProduct(product)}
+                    disabled={deletingProductId === product.id}
+                    className="border border-red-300 text-red-700 px-4 py-2 rounded hover:bg-red-50 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {deletingProductId === product.id ? 'Deleting...' : 'Delete Product'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onDoneExistingProduct(product)}
+                    disabled={!hasProductEditChanges(product) || deletingProductId === product.id}
+                    className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Done
+                  </button>
+                </div>
               </div>
 
               <div className="md:col-span-2">

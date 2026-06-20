@@ -58,6 +58,26 @@ const getStoragePathFromPublicUrl = (url: string) => {
   return url.slice(markerIndex + publicImagePrefix.length);
 };
 
+const getUniqueStoragePathsFromUrls = (urls: string[]) => {
+  return Array.from(
+    new Set(
+      urls
+        .map((url) => getStoragePathFromPublicUrl(url))
+        .filter((path): path is string => Boolean(path))
+    )
+  );
+};
+
+const chunkPaths = (paths: string[], size = 100) => {
+  const chunks: string[][] = [];
+
+  for (let i = 0; i < paths.length; i += size) {
+    chunks.push(paths.slice(i, i + size));
+  }
+
+  return chunks;
+};
+
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_IMAGE_SIZE_BYTES = 7 * 1024 * 1024; // 7 MB
 
@@ -158,6 +178,7 @@ export function Admin() {
   const [existingFolderImages, setExistingFolderImages] = useState<Record<string, string[]>>({});
   const [existingLoading, setExistingLoading] = useState<Record<string, boolean>>({});
   const [existingUploading, setExistingUploading] = useState<Record<string, boolean>>({});
+  const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
   const [productEdits, setProductEdits] = useState<Record<string, ProductEditDraft>>({});
   const [siteContentEdits, setSiteContentEdits] = useState<Record<string, string>>({});
   const [savedSiteContent, setSavedSiteContent] = useState<Record<string, string>>({});
@@ -743,6 +764,139 @@ export function Admin() {
       ...prev,
       [product.id]: (prev[product.id] || []).filter((img) => img !== imageUrl),
     }));
+  };
+
+  const handleDeleteProduct = async (product: AdminProduct) => {
+    const hasConfirmed = window.confirm(
+      `Delete "${product.name}"? This removes the product from the catalog and attempts to delete product images from Supabase Storage.`
+    );
+
+    if (!hasConfirmed) {
+      return;
+    }
+
+    if (!supabase) {
+      setProducts((prev) => prev.filter((item) => item.id !== product.id));
+      setProductEdits((prev) => {
+        const next = { ...prev };
+        delete next[product.id];
+        return next;
+      });
+      setExistingFolderImages((prev) => {
+        const next = { ...prev };
+        delete next[product.id];
+        return next;
+      });
+      setExistingLoading((prev) => {
+        const next = { ...prev };
+        delete next[product.id];
+        return next;
+      });
+      setExistingUploading((prev) => {
+        const next = { ...prev };
+        delete next[product.id];
+        return next;
+      });
+      setMessage(`Deleted ${product.name} locally.`);
+      return;
+    }
+
+    setDeletingProductId(product.id);
+    setMessage('');
+
+    let hadStorageCleanupError = false;
+
+    try {
+      const folder = getProductFolder(product).trim();
+      let folderImagePaths: string[] = [];
+
+      if (folder) {
+        const { data: folderItems, error: listError } = await supabase.storage
+          .from('product-images')
+          .list(folder, { limit: 500, sortBy: { column: 'name', order: 'asc' } });
+
+        if (listError) {
+          hadStorageCleanupError = true;
+        } else {
+          folderImagePaths = (folderItems || [])
+            .filter((item) => item.name && !item.name.endsWith('/'))
+            .map((item) => `${folder}/${item.name}`);
+        }
+      }
+
+      const selectedImagePaths = getUniqueStoragePathsFromUrls(product.images);
+      const loadedFolderImagePaths = getUniqueStoragePathsFromUrls(existingFolderImages[product.id] || []);
+      const imagePathsToDelete = Array.from(
+        new Set([...selectedImagePaths, ...loadedFolderImagePaths, ...folderImagePaths])
+      );
+
+      for (const pathChunk of chunkPaths(imagePathsToDelete)) {
+        if (pathChunk.length === 0) continue;
+        const { error: storageDeleteError } = await supabase.storage
+          .from('product-images')
+          .remove(pathChunk);
+
+        if (storageDeleteError) {
+          hadStorageCleanupError = true;
+          break;
+        }
+      }
+
+      const { error: rpcError } = await supabase.rpc('delete_admin_product', {
+        product_id: product.id,
+      });
+
+      const shouldFallbackToDirectDelete = Boolean(
+        rpcError && (rpcError.code === 'PGRST202' || rpcError.message.includes('delete_admin_product'))
+      );
+
+      if (rpcError && !shouldFallbackToDirectDelete) {
+        setMessage(`Failed to delete product: ${rpcError.message}`);
+        return;
+      }
+
+      if (shouldFallbackToDirectDelete) {
+        const { error: deleteError } = await supabase
+          .from('products')
+          .delete()
+          .eq('id', product.id);
+
+        if (deleteError) {
+          setMessage(`Failed to delete product: ${deleteError.message}`);
+          return;
+        }
+      }
+
+      setProducts((prev) => prev.filter((item) => item.id !== product.id));
+      setProductEdits((prev) => {
+        const next = { ...prev };
+        delete next[product.id];
+        return next;
+      });
+      setExistingFolderImages((prev) => {
+        const next = { ...prev };
+        delete next[product.id];
+        return next;
+      });
+      setExistingLoading((prev) => {
+        const next = { ...prev };
+        delete next[product.id];
+        return next;
+      });
+      setExistingUploading((prev) => {
+        const next = { ...prev };
+        delete next[product.id];
+        return next;
+      });
+
+      if (hadStorageCleanupError) {
+        setMessage(`Deleted ${product.name}. Some image files may still remain in storage and should be cleaned up manually.`);
+      } else {
+        setMessage(`Deleted ${product.name}.`);
+      }
+    } finally {
+      setDeletingProductId(null);
+    }
   };
 
   const updateProductField = (
@@ -1669,6 +1823,7 @@ export function Admin() {
             <ProductList
               isLoadingProducts={isLoadingProducts}
               sortedProducts={sortedProducts}
+              deletingProductId={deletingProductId}
               productEdits={productEdits}
               categoryOptions={categoryOptions}
               existingFolderImages={existingFolderImages}
@@ -1677,6 +1832,7 @@ export function Admin() {
               hasProductEditChanges={hasProductEditChanges}
               updateProductField={updateProductField}
               onDoneExistingProduct={handleDoneExistingProduct}
+              onDeleteProduct={handleDeleteProduct}
               getProductFolder={getProductFolder}
               onUploadExistingProductImages={handleUploadExistingProductImages}
               onLoadExistingFolderImages={handleLoadExistingFolderImages}
