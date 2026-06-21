@@ -12,6 +12,10 @@ import {
   type ProductEditDraft,
 } from './admin/types';
 
+const DEFAULT_MATERIALS_TEXT = 'Natural jute base, hand-mixed fabric paints, artisan-finished trims.';
+const DEFAULT_DIMENSIONS_TEXT = 'Available on request with piece-specific dimensions.';
+const DEFAULT_CUSTOMIZATION_TEXT = 'Color palette, motif style, and naming personalization available.';
+
 const initialForm: NewProductForm = {
   name: '',
   productCode: '',
@@ -20,6 +24,12 @@ const initialForm: NewProductForm = {
   inStock: true,
   images: [],
   category: 'totes',
+  showMaterials: true,
+  materialsText: DEFAULT_MATERIALS_TEXT,
+  showDimensions: true,
+  dimensionsText: DEFAULT_DIMENSIONS_TEXT,
+  showCustomization: true,
+  customizationText: DEFAULT_CUSTOMIZATION_TEXT,
 };
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -41,6 +51,12 @@ interface ProductRow {
   category: string;
   featured: boolean;
   in_stock: boolean;
+  show_materials: boolean | null;
+  materials_text: string | null;
+  show_dimensions: boolean | null;
+  dimensions_text: string | null;
+  show_customization: boolean | null;
+  customization_text: string | null;
 }
 
 const mapProductRow = (row: ProductRow): AdminProduct => ({
@@ -53,6 +69,12 @@ const mapProductRow = (row: ProductRow): AdminProduct => ({
   category: row.category,
   featured: Boolean(row.featured),
   inStock: Boolean(row.in_stock),
+  showMaterials: row.show_materials ?? true,
+  materialsText: row.materials_text ?? DEFAULT_MATERIALS_TEXT,
+  showDimensions: row.show_dimensions ?? true,
+  dimensionsText: row.dimensions_text ?? DEFAULT_DIMENSIONS_TEXT,
+  showCustomization: row.show_customization ?? true,
+  customizationText: row.customization_text ?? DEFAULT_CUSTOMIZATION_TEXT,
 });
 
 const getStoragePathFromPublicUrl = (url: string) => {
@@ -396,7 +418,7 @@ export function Admin() {
       setIsLoadingProducts(true);
       const { data, error } = await supabase
         .from('products')
-        .select('id, product_code, name, price, description, images, category, featured, in_stock')
+        .select('id, product_code, name, price, description, images, category, featured, in_stock, show_materials, materials_text, show_dimensions, dimensions_text, show_customization, customization_text')
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -460,6 +482,12 @@ export function Admin() {
           price: String(product.price),
           inStock: product.inStock,
           category: product.category,
+          showMaterials: product.showMaterials ?? true,
+          materialsText: product.materialsText ?? DEFAULT_MATERIALS_TEXT,
+          showDimensions: product.showDimensions ?? true,
+          dimensionsText: product.dimensionsText ?? DEFAULT_DIMENSIONS_TEXT,
+          showCustomization: product.showCustomization ?? true,
+          customizationText: product.customizationText ?? DEFAULT_CUSTOMIZATION_TEXT,
         };
       }
       return next;
@@ -536,12 +564,18 @@ export function Admin() {
       images: form.images,
       category: form.category,
       featured: false,
+      show_materials: form.showMaterials,
+      materials_text: form.materialsText.trim(),
+      show_dimensions: form.showDimensions,
+      dimensions_text: form.dimensionsText.trim(),
+      show_customization: form.showCustomization,
+      customization_text: form.customizationText.trim(),
     };
 
     const { data, error } = await supabase
       .from('products')
       .insert(payload)
-      .select('id, product_code, name, price, description, images, category, featured, in_stock')
+      .select('id, product_code, name, price, description, images, category, featured, in_stock, show_materials, materials_text, show_dimensions, dimensions_text, show_customization, customization_text')
       .single();
 
     if (error) {
@@ -980,7 +1014,7 @@ export function Admin() {
 
   const updateProductField = (
     id: string,
-    field: 'name' | 'productCode' | 'description' | 'price' | 'inStock' | 'category',
+    field: 'name' | 'productCode' | 'description' | 'price' | 'inStock' | 'category' | 'showMaterials' | 'materialsText' | 'showDimensions' | 'dimensionsText' | 'showCustomization' | 'customizationText',
     value: string | boolean,
   ) => {
     setProductEdits((prev) => {
@@ -992,6 +1026,12 @@ export function Admin() {
         price: baseProduct ? String(baseProduct.price) : '',
         inStock: baseProduct?.inStock ?? true,
         category: baseProduct?.category || 'totes',
+        showMaterials: baseProduct?.showMaterials ?? true,
+        materialsText: baseProduct?.materialsText ?? DEFAULT_MATERIALS_TEXT,
+        showDimensions: baseProduct?.showDimensions ?? true,
+        dimensionsText: baseProduct?.dimensionsText ?? DEFAULT_DIMENSIONS_TEXT,
+        showCustomization: baseProduct?.showCustomization ?? true,
+        customizationText: baseProduct?.customizationText ?? DEFAULT_CUSTOMIZATION_TEXT,
       };
 
       const nextDraft: ProductEditDraft = {
@@ -1002,14 +1042,32 @@ export function Admin() {
         price: current.price,
         inStock: current.inStock,
         category: current.category,
+        showMaterials: current.showMaterials,
+        materialsText: current.materialsText,
+        showDimensions: current.showDimensions,
+        dimensionsText: current.dimensionsText,
+        showCustomization: current.showCustomization,
+        customizationText: current.customizationText,
       };
 
-      if (field === 'name' || field === 'productCode' || field === 'description' || field === 'price' || field === 'category') {
+      if (field === 'name' || field === 'productCode' || field === 'description' || field === 'price' || field === 'category' || field === 'materialsText' || field === 'dimensionsText' || field === 'customizationText') {
         nextDraft[field] = String(value);
       }
 
       if (field === 'inStock') {
         nextDraft.inStock = Boolean(value);
+      }
+
+      if (field === 'showMaterials') {
+        nextDraft.showMaterials = Boolean(value);
+      }
+
+      if (field === 'showDimensions') {
+        nextDraft.showDimensions = Boolean(value);
+      }
+
+      if (field === 'showCustomization') {
+        nextDraft.showCustomization = Boolean(value);
       }
 
       if (field === 'category') {
@@ -1038,6 +1096,12 @@ export function Admin() {
       || Number(draft.price) !== product.price
       || draft.inStock !== product.inStock
       || draft.category !== product.category
+      || draft.showMaterials !== (product.showMaterials ?? true)
+      || draft.materialsText !== (product.materialsText ?? DEFAULT_MATERIALS_TEXT)
+      || draft.showDimensions !== (product.showDimensions ?? true)
+      || draft.dimensionsText !== (product.dimensionsText ?? DEFAULT_DIMENSIONS_TEXT)
+      || draft.showCustomization !== (product.showCustomization ?? true)
+      || draft.customizationText !== (product.customizationText ?? DEFAULT_CUSTOMIZATION_TEXT)
     );
   };
 
@@ -1048,6 +1112,9 @@ export function Admin() {
     const trimmedName = draft.name.trim();
     const trimmedProductCode = draft.productCode.trim().toUpperCase();
     const trimmedDescription = draft.description.trim();
+    const trimmedMaterialsText = draft.materialsText.trim();
+    const trimmedDimensionsText = draft.dimensionsText.trim();
+    const trimmedCustomizationText = draft.customizationText.trim();
     const parsedPrice = Number(draft.price);
 
     if (!trimmedName || !trimmedProductCode || !trimmedDescription || !draft.price.trim()) {
@@ -1073,6 +1140,12 @@ export function Admin() {
       price: parsedPrice,
       inStock: draft.inStock,
       category: draft.category,
+      showMaterials: draft.showMaterials,
+      materialsText: trimmedMaterialsText,
+      showDimensions: draft.showDimensions,
+      dimensionsText: trimmedDimensionsText,
+      showCustomization: draft.showCustomization,
+      customizationText: trimmedCustomizationText,
     };
 
     setProducts((prev) => prev.map((p) => (p.id === product.id ? nextProduct : p)));
@@ -1085,6 +1158,12 @@ export function Admin() {
         price: String(parsedPrice),
         inStock: draft.inStock,
         category: draft.category,
+        showMaterials: draft.showMaterials,
+        materialsText: trimmedMaterialsText,
+        showDimensions: draft.showDimensions,
+        dimensionsText: trimmedDimensionsText,
+        showCustomization: draft.showCustomization,
+        customizationText: trimmedCustomizationText,
       },
     }));
 
@@ -1102,6 +1181,12 @@ export function Admin() {
         price: parsedPrice,
         in_stock: draft.inStock,
         category: draft.category,
+        show_materials: draft.showMaterials,
+        materials_text: trimmedMaterialsText,
+        show_dimensions: draft.showDimensions,
+        dimensions_text: trimmedDimensionsText,
+        show_customization: draft.showCustomization,
+        customization_text: trimmedCustomizationText,
       })
       .eq('id', product.id);
 

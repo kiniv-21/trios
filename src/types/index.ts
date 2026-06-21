@@ -8,6 +8,12 @@ export interface Product {
   category: string;
   featured: boolean;
   inStock: boolean;
+  showMaterials?: boolean;
+  materialsText?: string;
+  showDimensions?: boolean;
+  dimensionsText?: string;
+  showCustomization?: boolean;
+  customizationText?: string;
 }
 
 export interface CartItem {

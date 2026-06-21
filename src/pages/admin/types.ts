@@ -10,6 +10,12 @@ export interface NewProductForm {
   inStock: boolean;
   images: string[];
   category: string;
+  showMaterials: boolean;
+  materialsText: string;
+  showDimensions: boolean;
+  dimensionsText: string;
+  showCustomization: boolean;
+  customizationText: string;
 }
 
 export interface ProductEditDraft {
@@ -19,6 +25,12 @@ export interface ProductEditDraft {
   price: string;
   inStock: boolean;
   category: string;
+  showMaterials: boolean;
+  materialsText: string;
+  showDimensions: boolean;
+  dimensionsText: string;
+  showCustomization: boolean;
+  customizationText: string;
 }
 
 export interface CategoryOption {

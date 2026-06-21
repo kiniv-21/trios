@@ -20,7 +20,7 @@ interface ProductListProps {
   hasProductEditChanges: (product: AdminProduct) => boolean;
   updateProductField: (
     id: string,
-    field: 'name' | 'productCode' | 'description' | 'price' | 'inStock' | 'category',
+    field: 'name' | 'productCode' | 'description' | 'price' | 'inStock' | 'category' | 'showMaterials' | 'materialsText' | 'showDimensions' | 'dimensionsText' | 'showCustomization' | 'customizationText',
     value: string | boolean,
   ) => void;
   onDoneExistingProduct: (product: AdminProduct) => Promise<void>;
@@ -110,6 +110,64 @@ export function ProductList({
                   rows={3}
                   className="w-full border border-gray-300 rounded px-3 py-2"
                 />
+              </div>
+
+              <div className="md:col-span-2 space-y-3 border border-gray-200 rounded p-3 bg-gray-50">
+                <p className="text-xs font-semibold text-gray-700">Product Story Sections</p>
+
+                <div>
+                  <label className="inline-flex items-center gap-2 text-xs font-semibold text-gray-600 mb-1">
+                    <input
+                      type="checkbox"
+                      checked={productEdits[product.id]?.showMaterials ?? product.showMaterials ?? true}
+                      onChange={(e) => updateProductField(product.id, 'showMaterials', e.target.checked)}
+                      className="h-4 w-4"
+                    />
+                    Show Materials
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={productEdits[product.id]?.materialsText ?? product.materialsText ?? ''}
+                    onChange={(e) => updateProductField(product.id, 'materialsText', e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                  />
+                </div>
+
+                <div>
+                  <label className="inline-flex items-center gap-2 text-xs font-semibold text-gray-600 mb-1">
+                    <input
+                      type="checkbox"
+                      checked={productEdits[product.id]?.showDimensions ?? product.showDimensions ?? true}
+                      onChange={(e) => updateProductField(product.id, 'showDimensions', e.target.checked)}
+                      className="h-4 w-4"
+                    />
+                    Show Dimensions
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={productEdits[product.id]?.dimensionsText ?? product.dimensionsText ?? ''}
+                    onChange={(e) => updateProductField(product.id, 'dimensionsText', e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                  />
+                </div>
+
+                <div>
+                  <label className="inline-flex items-center gap-2 text-xs font-semibold text-gray-600 mb-1">
+                    <input
+                      type="checkbox"
+                      checked={productEdits[product.id]?.showCustomization ?? product.showCustomization ?? true}
+                      onChange={(e) => updateProductField(product.id, 'showCustomization', e.target.checked)}
+                      className="h-4 w-4"
+                    />
+                    Show Customization Options
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={productEdits[product.id]?.customizationText ?? product.customizationText ?? ''}
+                    onChange={(e) => updateProductField(product.id, 'customizationText', e.target.value)}
+                    className="w-full border border-gray-300 rounded px-3 py-2"
+                  />
+                </div>
               </div>
 
               <div>

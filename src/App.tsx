@@ -31,7 +31,17 @@ interface ProductRow {
   category: string;
   featured: boolean;
   in_stock: boolean;
+  show_materials: boolean | null;
+  materials_text: string | null;
+  show_dimensions: boolean | null;
+  dimensions_text: string | null;
+  show_customization: boolean | null;
+  customization_text: string | null;
 }
+
+const DEFAULT_MATERIALS_TEXT = 'Natural jute base, hand-mixed fabric paints, artisan-finished trims.';
+const DEFAULT_DIMENSIONS_TEXT = 'Available on request with piece-specific dimensions.';
+const DEFAULT_CUSTOMIZATION_TEXT = 'Color palette, motif style, and naming personalization available.';
 
 interface CategoryOption {
   id: string;
@@ -113,6 +123,12 @@ const mapProductRow = (row: ProductRow): Product => ({
   category: normalizeCategoryId(row.category),
   featured: Boolean(row.featured),
   inStock: Boolean(row.in_stock),
+  showMaterials: row.show_materials ?? true,
+  materialsText: row.materials_text ?? DEFAULT_MATERIALS_TEXT,
+  showDimensions: row.show_dimensions ?? true,
+  dimensionsText: row.dimensions_text ?? DEFAULT_DIMENSIONS_TEXT,
+  showCustomization: row.show_customization ?? true,
+  customizationText: row.customization_text ?? DEFAULT_CUSTOMIZATION_TEXT,
 });
 
 const normalizeCategoryId = (value: string) =>
@@ -187,9 +203,12 @@ const getCategorySubtitle = (categoryId: string) => {
 
 const getProductStory = (product: Product) => ({
   shortStory: product.description,
-  materials: 'Natural jute base, hand-mixed fabric paints, artisan-finished trims.',
-  dimensions: 'Available on request with piece-specific dimensions.',
-  customization: 'Color palette, motif style, and naming personalization available.',
+  showMaterials: product.showMaterials ?? true,
+  materials: product.materialsText ?? DEFAULT_MATERIALS_TEXT,
+  showDimensions: product.showDimensions ?? true,
+  dimensions: product.dimensionsText ?? DEFAULT_DIMENSIONS_TEXT,
+  showCustomization: product.showCustomization ?? true,
+  customization: product.customizationText ?? DEFAULT_CUSTOMIZATION_TEXT,
 });
 
 function App() {
@@ -241,7 +260,7 @@ function App() {
 
       const { data, error } = await supabase
         .from('products')
-        .select('id, product_code, name, price, description, images, category, featured, in_stock')
+        .select('id, product_code, name, price, description, images, category, featured, in_stock, show_materials, materials_text, show_dimensions, dimensions_text, show_customization, customization_text')
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -377,6 +396,7 @@ function App() {
 
   const selectedProductReference = selectedProduct?.productCode || selectedProduct?.id || '';
   const isSelectedProductOutOfStock = Boolean(selectedProduct && !selectedProduct.inStock);
+  const selectedProductStory = selectedProduct ? getProductStory(selectedProduct) : null;
 
   const whatsappMessage = selectedProduct
     ? [
@@ -619,22 +639,30 @@ function App() {
                           </p>
                         </div>
 
-                        <p className="text-[1.02rem] leading-relaxed text-[#6B6B6B] sm:text-base">{getProductStory(selectedProduct).shortStory}</p>
+                        <p className="text-[1.02rem] leading-relaxed text-[#6B6B6B] sm:text-base">{selectedProductStory?.shortStory}</p>
 
-                        <div className="space-y-4 rounded-2xl bg-[#FBF8F3] p-5">
-                          <div>
-                            <h4 className="font-semibold text-[#2B2B2B]">Materials</h4>
-                            <p className="text-sm text-[#6B6B6B]">{getProductStory(selectedProduct).materials}</p>
+                        {(selectedProductStory?.showMaterials || selectedProductStory?.showDimensions || selectedProductStory?.showCustomization) && (
+                          <div className="space-y-4 rounded-2xl bg-[#FBF8F3] p-5">
+                            {selectedProductStory?.showMaterials && selectedProductStory.materials && (
+                              <div>
+                                <h4 className="font-semibold text-[#2B2B2B]">Materials</h4>
+                                <p className="text-sm text-[#6B6B6B]">{selectedProductStory.materials}</p>
+                              </div>
+                            )}
+                            {selectedProductStory?.showDimensions && selectedProductStory.dimensions && (
+                              <div>
+                                <h4 className="font-semibold text-[#2B2B2B]">Dimensions</h4>
+                                <p className="text-sm text-[#6B6B6B]">{selectedProductStory.dimensions}</p>
+                              </div>
+                            )}
+                            {selectedProductStory?.showCustomization && selectedProductStory.customization && (
+                              <div>
+                                <h4 className="font-semibold text-[#2B2B2B]">Customization Options</h4>
+                                <p className="text-sm text-[#6B6B6B]">{selectedProductStory.customization}</p>
+                              </div>
+                            )}
                           </div>
-                          <div>
-                            <h4 className="font-semibold text-[#2B2B2B]">Dimensions</h4>
-                            <p className="text-sm text-[#6B6B6B]">{getProductStory(selectedProduct).dimensions}</p>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-[#2B2B2B]">Customization Options</h4>
-                            <p className="text-sm text-[#6B6B6B]">{getProductStory(selectedProduct).customization}</p>
-                          </div>
-                        </div>
+                        )}
 
                         <div className="flex flex-wrap gap-2">
                           <span className="rounded-full bg-[#F1E4D6] px-4 py-2 text-xs font-semibold text-[#7F5B3A]">Handcrafted</span>

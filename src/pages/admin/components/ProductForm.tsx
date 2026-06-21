@@ -119,6 +119,67 @@ export function ProductForm({
       </div>
 
       <div className="md:col-span-2 border border-gray-200 rounded p-4 space-y-4">
+        <p className="text-sm font-semibold text-gray-800">Product Story Sections</p>
+
+        <div>
+          <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <input
+              type="checkbox"
+              checked={form.showMaterials}
+              onChange={(e) => onFormFieldChange('showMaterials', e.target.checked)}
+              className="h-4 w-4"
+            />
+            Show Materials
+          </label>
+          <textarea
+            value={form.materialsText}
+            onChange={(e) => onFormFieldChange('materialsText', e.target.value)}
+            rows={2}
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            placeholder="Materials text"
+          />
+        </div>
+
+        <div>
+          <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <input
+              type="checkbox"
+              checked={form.showDimensions}
+              onChange={(e) => onFormFieldChange('showDimensions', e.target.checked)}
+              className="h-4 w-4"
+            />
+            Show Dimensions
+          </label>
+          <textarea
+            value={form.dimensionsText}
+            onChange={(e) => onFormFieldChange('dimensionsText', e.target.value)}
+            rows={2}
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            placeholder="Dimensions text"
+          />
+        </div>
+
+        <div>
+          <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <input
+              type="checkbox"
+              checked={form.showCustomization}
+              onChange={(e) => onFormFieldChange('showCustomization', e.target.checked)}
+              className="h-4 w-4"
+            />
+            Show Customization Options
+          </label>
+          <textarea
+            value={form.customizationText}
+            onChange={(e) => onFormFieldChange('customizationText', e.target.value)}
+            rows={2}
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            placeholder="Customization options text"
+          />
+        </div>
+      </div>
+
+      <div className="md:col-span-2 border border-gray-200 rounded p-4 space-y-4">
         <p className="text-sm font-semibold text-gray-800">Product Images (Supabase Storage)</p>
 
         <div>
