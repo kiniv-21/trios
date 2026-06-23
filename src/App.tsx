@@ -212,7 +212,8 @@ const getProductStory = (product: Product) => ({
 });
 
 function App() {
-  const [products, setProducts] = useState<Product[]>(() => (supabase ? [] : staticProducts));
+  const [products, setProducts] = useState<Product[]>(staticProducts);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [storedCategories, setStoredCategories] = useState<CategoryOption[]>([]);
   const [siteContent, setSiteContent] = useState<SiteContent>(defaultSiteContent);
 
@@ -255,6 +256,7 @@ function App() {
     const loadProducts = async () => {
       if (!supabase) {
         setProducts(staticProducts);
+        setIsLoadingProducts(false);
         return;
       }
 
@@ -266,10 +268,12 @@ function App() {
       if (error) {
         console.error('Failed to load products from Supabase:', error.message);
         setProducts([]);
+        setIsLoadingProducts(false);
         return;
       }
 
       setProducts(Array.isArray(data) ? (data as ProductRow[]).map(mapProductRow) : []);
+      setIsLoadingProducts(false);
     };
 
     loadProducts();
@@ -452,7 +456,7 @@ function App() {
       </header>
 
       <main>
-        {supabase && mergedCategories.length === 0 && products.length === 0 ? (
+        {supabase && !isLoadingProducts && mergedCategories.length === 0 && products.length === 0 ? (
           <section className="mx-auto flex min-h-[55vh] max-w-7xl flex-col items-center justify-center px-5 text-center sm:px-8">
             <p className="text-sm uppercase tracking-[0.2em] text-[#A67C52]">Trios Art</p>
             <h1 className="mt-3 font-heading text-[2.35rem] leading-[1.1] sm:text-6xl">
