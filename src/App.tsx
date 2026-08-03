@@ -229,115 +229,71 @@ const getWarliSceneIndex = (id: string): number => {
   return Math.abs(h) % 5;
 };
 
+// Reusable Warli figure using the classic double-triangle (hourglass) body style
+const warliPerson = (tx: number = 0) => (
+  <g key={tx} transform={`translate(${tx}, 0)`}>
+    <circle cx="10" cy="6" r="3" fill={W}/>
+    <polygon points="10,9 5,17 15,17" fill={W}/>
+    <polygon points="10,17 5,25 15,25" fill={W}/>
+    <line x1="5" y1="13" x2="1" y2="16" stroke={W} strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="15" y1="13" x2="19" y2="16" stroke={W} strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="7" y1="25" x2="4" y2="31" stroke={W} strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="13" y1="25" x2="16" y2="31" stroke={W} strokeWidth="1.5" strokeLinecap="round"/>
+  </g>
+);
+
+const svgProps = {
+  viewBox: '0 0 130 36',
+  className: 'h-9 w-auto',
+  fill: 'none',
+  'aria-hidden': true,
+} as const;
+
 const WARLI_SCENES = [
-  /* 0: Three dancers holding hands */
-  <svg key="w0" viewBox="0 0 140 44" className="h-9 w-auto" stroke={W} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" aria-hidden="true">
-    <circle cx="22" cy="6" r="4" fill={W} stroke="none"/>
-    <polygon points="22,10 15,24 29,24" fill={W} stroke="none"/>
-    <line x1="19" y1="15" x2="11" y2="8"/>
-    <line x1="15" y1="24" x2="13" y2="36"/>
-    <line x1="29" y1="24" x2="27" y2="36"/>
-    <circle cx="70" cy="6" r="4" fill={W} stroke="none"/>
-    <polygon points="70,10 63,24 77,24" fill={W} stroke="none"/>
-    <line x1="63" y1="24" x2="61" y2="36"/>
-    <line x1="77" y1="24" x2="75" y2="36"/>
-    <circle cx="118" cy="6" r="4" fill={W} stroke="none"/>
-    <polygon points="118,10 111,24 125,24" fill={W} stroke="none"/>
-    <line x1="121" y1="15" x2="129" y2="8"/>
-    <line x1="111" y1="24" x2="109" y2="36"/>
-    <line x1="125" y1="24" x2="123" y2="36"/>
-    <line x1="25" y1="15" x2="67" y2="15"/>
-    <line x1="73" y1="15" x2="115" y2="15"/>
+  /* 0: 2 figures + drum + 1 figure */
+  <svg key="w0" {...svgProps}>
+    {warliPerson(0)}
+    {warliPerson(28)}
+    <ellipse cx="74" cy="18" rx="7" ry="8" stroke={W} strokeWidth="1.5"/>
+    <line x1="67" y1="18" x2="81" y2="18" stroke={W} strokeWidth="1.2" strokeLinecap="round"/>
+    {warliPerson(90)}
   </svg>,
-  /* 1: Two figures with tree */
-  <svg key="w1" viewBox="0 0 140 44" className="h-9 w-auto" stroke={W} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" aria-hidden="true">
-    <circle cx="25" cy="6" r="4" fill={W} stroke="none"/>
-    <polygon points="25,10 18,24 32,24" fill={W} stroke="none"/>
-    <line x1="22" y1="16" x2="12" y2="9"/>
-    <line x1="28" y1="16" x2="46" y2="16"/>
-    <line x1="18" y1="24" x2="16" y2="36"/>
-    <line x1="32" y1="24" x2="30" y2="36"/>
-    <line x1="70" y1="18" x2="70" y2="38"/>
-    <line x1="70" y1="23" x2="58" y2="14"/>
-    <line x1="70" y1="23" x2="82" y2="14"/>
-    <circle cx="62" cy="11" r="3.5" fill={W} stroke="none"/>
-    <circle cx="78" cy="11" r="3.5" fill={W} stroke="none"/>
-    <circle cx="70" cy="7" r="3.5" fill={W} stroke="none"/>
-    <circle cx="115" cy="6" r="4" fill={W} stroke="none"/>
-    <polygon points="115,10 108,24 122,24" fill={W} stroke="none"/>
-    <line x1="118" y1="16" x2="128" y2="9"/>
-    <line x1="112" y1="16" x2="94" y2="16"/>
-    <line x1="108" y1="24" x2="106" y2="36"/>
-    <line x1="122" y1="24" x2="120" y2="36"/>
+  /* 1: 3 figures in a row */
+  <svg key="w1" {...svgProps}>
+    {warliPerson(10)}
+    {warliPerson(48)}
+    {warliPerson(86)}
   </svg>,
-  /* 2: Four figures dancing in a row */
-  <svg key="w2" viewBox="0 0 140 44" className="h-9 w-auto" stroke={W} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" aria-hidden="true">
-    <circle cx="16" cy="7" r="3.5" fill={W} stroke="none"/>
-    <polygon points="16,11 10,22 22,22" fill={W} stroke="none"/>
-    <line x1="13" y1="15" x2="6" y2="9"/>
-    <line x1="10" y1="22" x2="8" y2="33"/>
-    <line x1="22" y1="22" x2="20" y2="33"/>
-    <circle cx="48" cy="7" r="3.5" fill={W} stroke="none"/>
-    <polygon points="48,11 42,22 54,22" fill={W} stroke="none"/>
-    <line x1="42" y1="22" x2="40" y2="33"/>
-    <line x1="54" y1="22" x2="52" y2="33"/>
-    <circle cx="92" cy="7" r="3.5" fill={W} stroke="none"/>
-    <polygon points="92,11 86,22 98,22" fill={W} stroke="none"/>
-    <line x1="86" y1="22" x2="84" y2="33"/>
-    <line x1="98" y1="22" x2="96" y2="33"/>
-    <circle cx="124" cy="7" r="3.5" fill={W} stroke="none"/>
-    <polygon points="124,11 118,22 130,22" fill={W} stroke="none"/>
-    <line x1="127" y1="15" x2="134" y2="9"/>
-    <line x1="118" y1="22" x2="116" y2="33"/>
-    <line x1="130" y1="22" x2="128" y2="33"/>
-    <line x1="19" y1="15" x2="45" y2="15"/>
-    <line x1="51" y1="15" x2="89" y2="15"/>
-    <line x1="95" y1="15" x2="121" y2="15"/>
+  /* 2: 2 figures + fruit tree */
+  <svg key="w2" {...svgProps}>
+    {warliPerson(3)}
+    <line x1="65" y1="16" x2="65" y2="32" stroke={W} strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="65" y1="20" x2="55" y2="12" stroke={W} strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="65" y1="20" x2="75" y2="12" stroke={W} strokeWidth="1.5" strokeLinecap="round"/>
+    <circle cx="58" cy="9" r="3" fill={W}/>
+    <circle cx="72" cy="9" r="3" fill={W}/>
+    <circle cx="65" cy="6" r="3" fill={W}/>
+    {warliPerson(92)}
   </svg>,
-  /* 3: Two figures around a sun motif */
-  <svg key="w3" viewBox="0 0 140 44" className="h-9 w-auto" stroke={W} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" aria-hidden="true">
-    <circle cx="70" cy="22" r="5" fill={W} stroke="none"/>
-    <line x1="70" y1="9" x2="70" y2="13"/>
-    <line x1="70" y1="31" x2="70" y2="35"/>
-    <line x1="57" y1="22" x2="61" y2="22"/>
-    <line x1="79" y1="22" x2="83" y2="22"/>
-    <line x1="61" y1="13" x2="64" y2="16"/>
-    <line x1="79" y1="13" x2="76" y2="16"/>
-    <line x1="61" y1="31" x2="64" y2="28"/>
-    <line x1="79" y1="31" x2="76" y2="28"/>
-    <circle cx="24" cy="6" r="4" fill={W} stroke="none"/>
-    <polygon points="24,10 17,24 31,24" fill={W} stroke="none"/>
-    <line x1="21" y1="16" x2="12" y2="10"/>
-    <line x1="27" y1="16" x2="42" y2="16"/>
-    <line x1="17" y1="24" x2="15" y2="36"/>
-    <line x1="31" y1="24" x2="29" y2="36"/>
-    <circle cx="116" cy="6" r="4" fill={W} stroke="none"/>
-    <polygon points="116,10 109,24 123,24" fill={W} stroke="none"/>
-    <line x1="119" y1="16" x2="128" y2="10"/>
-    <line x1="113" y1="16" x2="98" y2="16"/>
-    <line x1="109" y1="24" x2="107" y2="36"/>
-    <line x1="123" y1="24" x2="121" y2="36"/>
+  /* 3: 4 figures in a row */
+  <svg key="w3" {...svgProps}>
+    {warliPerson(3)}
+    {warliPerson(32)}
+    {warliPerson(61)}
+    {warliPerson(90)}
   </svg>,
-  /* 4: Family — tall parent with two small children */
-  <svg key="w4" viewBox="0 0 140 44" className="h-9 w-auto" stroke={W} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" aria-hidden="true">
-    <circle cx="70" cy="4" r="5" fill={W} stroke="none"/>
-    <polygon points="70,9 60,26 80,26" fill={W} stroke="none"/>
-    <line x1="64" y1="17" x2="50" y2="13"/>
-    <line x1="76" y1="17" x2="90" y2="13"/>
-    <line x1="60" y1="26" x2="58" y2="38"/>
-    <line x1="80" y1="26" x2="78" y2="38"/>
-    <circle cx="34" cy="13" r="3" fill={W} stroke="none"/>
-    <polygon points="34,17 28,27 40,27" fill={W} stroke="none"/>
-    <line x1="37" y1="21" x2="48" y2="14"/>
-    <line x1="31" y1="21" x2="24" y2="16"/>
-    <line x1="28" y1="27" x2="26" y2="37"/>
-    <line x1="40" y1="27" x2="38" y2="37"/>
-    <circle cx="106" cy="13" r="3" fill={W} stroke="none"/>
-    <polygon points="106,17 100,27 112,27" fill={W} stroke="none"/>
-    <line x1="103" y1="21" x2="92" y2="14"/>
-    <line x1="109" y1="21" x2="116" y2="16"/>
-    <line x1="100" y1="27" x2="98" y2="37"/>
-    <line x1="112" y1="27" x2="110" y2="37"/>
+  /* 4: 2 figures + bird (peacock motif) */
+  <svg key="w4" {...svgProps}>
+    {warliPerson(3)}
+    <ellipse cx="65" cy="22" rx="5" ry="4" fill={W}/>
+    <circle cx="70" cy="16" r="2" fill={W}/>
+    <line x1="72" y1="16" x2="75" y2="15" stroke={W} strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="60" y1="19" x2="50" y2="13" stroke={W} strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="60" y1="22" x2="49" y2="22" stroke={W} strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="60" y1="25" x2="50" y2="31" stroke={W} strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="63" y1="26" x2="61" y2="32" stroke={W} strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="67" y1="26" x2="69" y2="32" stroke={W} strokeWidth="1.5" strokeLinecap="round"/>
+    {warliPerson(92)}
   </svg>,
 ];
 
