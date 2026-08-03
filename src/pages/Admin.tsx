@@ -2006,18 +2006,7 @@ export function Admin() {
                       className="w-full border border-gray-300 rounded px-3 py-2"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Testimonial Carousel Speed (seconds)</label>
-                    <input
-                      type="number"
-                      min="2"
-                      max="30"
-                      value={siteContentEdits.testimonial_carousel_interval ? String(Number(siteContentEdits.testimonial_carousel_interval) / 1000) : '5'}
-                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, testimonial_carousel_interval: String(Math.max(2, Number(e.target.value)) * 1000) }))}
-                      className="w-32 border border-gray-300 rounded px-3 py-2"
-                    />
-                    <p className="mt-1 text-xs text-gray-500">How long each testimonial stays visible before rotating. Minimum 2s.</p>
-                  </div>
+
                 </div>
               </div>
 
@@ -2148,6 +2137,30 @@ export function Admin() {
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Manage Testimonials</h2>
             {testimonialMessage && <p className="mb-4 text-sm text-indigo-700 bg-indigo-50 p-3 rounded">{testimonialMessage}</p>}
+
+            {/* Carousel speed */}
+            <div className="mb-6 flex items-center gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700">Rotation Speed (seconds)</label>
+                <p className="mt-0.5 text-xs text-gray-500">How long each testimonial stays before auto-advancing. Minimum 2s.</p>
+              </div>
+              <input
+                type="number"
+                min="2"
+                max="30"
+                value={siteContentEdits.testimonial_carousel_interval ? String(Number(siteContentEdits.testimonial_carousel_interval) / 1000) : '5'}
+                onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, testimonial_carousel_interval: String(Math.max(2, Number(e.target.value)) * 1000) }))}
+                className="w-20 border border-gray-300 rounded px-3 py-2 text-sm"
+              />
+              <button
+                type="button"
+                onClick={handleSaveSiteContent}
+                disabled={isSavingSiteContent}
+                className="bg-indigo-600 text-white px-3 py-2 rounded text-sm font-medium hover:bg-indigo-700 transition disabled:opacity-50"
+              >
+                {isSavingSiteContent ? 'Saving...' : 'Save'}
+              </button>
+            </div>
 
             {/* Add form */}
             <div className="mb-8 border border-gray-200 rounded-lg p-5 bg-gray-50">
