@@ -39,6 +39,13 @@ interface ProductRow {
   customization_text: string | null;
 }
 
+interface Testimonial {
+  id: string;
+  author_name: string;
+  location: string | null;
+  text: string;
+}
+
 const DEFAULT_MATERIALS_TEXT = 'Natural jute base, hand-mixed fabric paints, artisan-finished trims.';
 const DEFAULT_DIMENSIONS_TEXT = 'Available on request with piece-specific dimensions.';
 const DEFAULT_CUSTOMIZATION_TEXT = 'Color palette, motif style, and naming personalization available.';
@@ -224,6 +231,10 @@ function App() {
   const [animateShowcase, setAnimateShowcase] = useState(false);
 
   const productSectionRef = useRef<HTMLElement | null>(null);
+  const carouselPausedRef = useRef(false);
+
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [testimonialIndex, setTestimonialIndex] = useState(0);
 
   useEffect(() => {
     const loadSiteContent = async () => {
@@ -278,6 +289,29 @@ function App() {
 
     loadProducts();
   }, []);
+
+  useEffect(() => {
+    const loadTestimonials = async () => {
+      if (!supabase) return;
+      const { data, error } = await supabase
+        .from('testimonials')
+        .select('id, author_name, location, text')
+        .eq('active', true)
+        .order('display_order', { ascending: true });
+      if (!error && data) setTestimonials(data as Testimonial[]);
+    };
+    loadTestimonials();
+  }, []);
+
+  useEffect(() => {
+    if (testimonials.length <= 1) return;
+    const timer = setInterval(() => {
+      if (!carouselPausedRef.current) {
+        setTestimonialIndex(i => (i + 1) % testimonials.length);
+      }
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [testimonials.length]);
 
   useEffect(() => {
     document.title = siteContent.site_tab_title || defaultSiteContent.site_tab_title || 'Trios Art';
@@ -765,6 +799,85 @@ function App() {
             })}
           </div>
         </section>
+
+        {testimonials.length > 0 && (
+          <section className="py-14 sm:py-16 overflow-hidden" id="testimonials">
+            <div className="mx-auto max-w-7xl px-5 sm:px-8 text-center mb-12">
+              <p className="text-sm uppercase tracking-[0.2em] text-[#A67C52]">Customer Stories</p>
+              <h2 className="mt-3 font-heading text-[2.05rem] leading-tight sm:text-5xl">What Our Customers Say</h2>
+            </div>
+
+            <div
+              className="relative h-[300px]"
+              onMouseEnter={() => { carouselPausedRef.current = true; }}
+              onMouseLeave={() => { carouselPausedRef.current = false; }}
+            >
+              {(testimonials.length === 1 ? [0] : testimonials.length <= 3 ? [-1, 0, 1] : [-2, -1, 0, 1, 2]).map((offset) => {
+                const total = testimonials.length;
+                const idx = ((testimonialIndex + offset) % total + total) % total;
+                const t = testimonials[idx];
+                const abs = Math.abs(offset);
+                const scale = abs === 0 ? 1 : abs === 1 ? 0.82 : 0.65;
+                const opacity = abs === 0 ? 1 : abs === 1 ? 0.6 : 0.3;
+                return (
+                  <div
+                    key={`slot-${offset}`}
+                    onClick={abs > 0 ? () => setTestimonialIndex(idx) : undefined}
+                    style={{
+                      position: 'absolute',
+                      left: '50%',
+                      top: '50%',
+                      width: '320px',
+                      transform: `translateX(calc(-50% + ${offset * 360}px)) translateY(-50%) scale(${scale})`,
+                      opacity,
+                      zIndex: 10 - abs * 3,
+                      transition: 'transform 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease',
+                      cursor: abs > 0 ? 'pointer' : 'default',
+                    }}
+                  >
+                    <div className="rounded-3xl border border-[#E9DDCF] bg-white p-6 shadow-sm">
+                      <p className="font-serif text-4xl leading-none text-[#A67C52]">&ldquo;</p>
+                      <p className="mt-2 line-clamp-5 text-[0.97rem] leading-relaxed text-[#2B2B2B]">{t.text}</p>
+                      <div className="mt-4 border-t border-[#E9DDCF] pt-4">
+                        <p className="font-semibold text-[#2B2B2B]">{t.author_name}</p>
+                        {t.location && <p className="text-sm text-[#A67C52]">{t.location}</p>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {testimonials.length > 1 && (
+              <div className="mt-6 flex items-center justify-center gap-3">
+                <button
+                  onClick={() => setTestimonialIndex(i => (i - 1 + testimonials.length) % testimonials.length)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-[#D9C8B7] bg-white text-[#A67C52] text-lg transition hover:bg-[#F7F1E8]"
+                  aria-label="Previous testimonial"
+                >
+                  &#8249;
+                </button>
+                {testimonials.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setTestimonialIndex(i)}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      i === testimonialIndex ? 'w-6 bg-[#A67C52]' : 'w-2 bg-[#D9C8B7]'
+                    }`}
+                    aria-label={`Go to testimonial ${i + 1}`}
+                  />
+                ))}
+                <button
+                  onClick={() => setTestimonialIndex(i => (i + 1) % testimonials.length)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-[#D9C8B7] bg-white text-[#A67C52] text-lg transition hover:bg-[#F7F1E8]"
+                  aria-label="Next testimonial"
+                >
+                  &#8250;
+                </button>
+              </div>
+            )}
+          </section>
+        )}
 
         <section className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16" id="contact">
           <div className="rounded-3xl border border-[#E9DDCF] bg-white p-8 sm:p-10">

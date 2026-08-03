@@ -59,6 +59,15 @@ interface ProductRow {
   customization_text: string | null;
 }
 
+interface TestimonialRow {
+  id: string;
+  author_name: string;
+  location: string | null;
+  text: string;
+  display_order: number;
+  active: boolean;
+}
+
 const mapProductRow = (row: ProductRow): AdminProduct => ({
   id: row.id,
   productCode: row.product_code || undefined,
@@ -225,7 +234,7 @@ export function Admin() {
   const [siteContentEdits, setSiteContentEdits] = useState<Record<string, string>>({});
   const [savedSiteContent, setSavedSiteContent] = useState<Record<string, string>>({});
   const [isSavingSiteContent, setIsSavingSiteContent] = useState(false);
-  const [adminTab, setAdminTab] = useState<'content' | 'products'>('content');
+  const [adminTab, setAdminTab] = useState<'content' | 'products' | 'testimonials'>('content');
   const [customCategories, setCustomCategories] = useState<CategoryOption[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isSavingCategoryChange, setIsSavingCategoryChange] = useState(false);
@@ -236,6 +245,11 @@ export function Admin() {
   const [isUploadingCategoryImage, setIsUploadingCategoryImage] = useState(false);
   const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null);
   const [deleteReplacementCategoryId, setDeleteReplacementCategoryId] = useState('');
+  const [testimonials, setTestimonials] = useState<TestimonialRow[]>([]);
+  const [isLoadingTestimonials, setIsLoadingTestimonials] = useState(false);
+  const [newTestimonialForm, setNewTestimonialForm] = useState({ author_name: '', location: '', text: '' });
+  const [isSavingTestimonial, setIsSavingTestimonial] = useState(false);
+  const [testimonialMessage, setTestimonialMessage] = useState('');
 
   const newProductFolder = toFolderName(form.name);
 
@@ -458,6 +472,20 @@ export function Admin() {
       loadProducts();
       loadSiteContent();
     }
+  }, [isUnlocked]);
+
+  useEffect(() => {
+    const loadTestimonials = async () => {
+      if (!supabase) return;
+      setIsLoadingTestimonials(true);
+      const { data, error } = await supabase
+        .from('testimonials')
+        .select('id, author_name, location, text, display_order, active')
+        .order('display_order', { ascending: true });
+      if (!error && data) setTestimonials(data as TestimonialRow[]);
+      setIsLoadingTestimonials(false);
+    };
+    if (isUnlocked) loadTestimonials();
   }, [isUnlocked]);
 
   useEffect(() => {
@@ -1233,6 +1261,44 @@ export function Admin() {
     }
   };
 
+  const handleAddTestimonial = async () => {
+    if (!supabase || !newTestimonialForm.author_name.trim() || !newTestimonialForm.text.trim()) return;
+    setIsSavingTestimonial(true);
+    const nextOrder = testimonials.length > 0 ? Math.max(...testimonials.map(t => t.display_order)) + 1 : 0;
+    const { data, error } = await supabase
+      .from('testimonials')
+      .insert({
+        author_name: newTestimonialForm.author_name.trim(),
+        location: newTestimonialForm.location.trim() || null,
+        text: newTestimonialForm.text.trim(),
+        display_order: nextOrder,
+        active: true,
+      })
+      .select('id, author_name, location, text, display_order, active')
+      .single();
+    if (error) {
+      setTestimonialMessage('Failed to add testimonial.');
+    } else if (data) {
+      setTestimonials(prev => [...prev, data as TestimonialRow]);
+      setNewTestimonialForm({ author_name: '', location: '', text: '' });
+      setTestimonialMessage('Testimonial added successfully.');
+    }
+    setIsSavingTestimonial(false);
+    setTimeout(() => setTestimonialMessage(''), 3000);
+  };
+
+  const handleToggleTestimonialActive = async (id: string, active: boolean) => {
+    if (!supabase) return;
+    const { error } = await supabase.from('testimonials').update({ active: !active }).eq('id', id);
+    if (!error) setTestimonials(prev => prev.map(t => t.id === id ? { ...t, active: !active } : t));
+  };
+
+  const handleDeleteTestimonial = async (id: string) => {
+    if (!supabase || !window.confirm('Delete this testimonial? This cannot be undone.')) return;
+    const { error } = await supabase.from('testimonials').delete().eq('id', id);
+    if (!error) setTestimonials(prev => prev.filter(t => t.id !== id));
+  };
+
   const handleLogout = async () => {
     if (supabase) {
       await supabase.auth.signOut();
@@ -1609,6 +1675,20 @@ export function Admin() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
               </svg>
               Product Management
+            </button>
+            <button
+              type="button"
+              onClick={() => setAdminTab('testimonials')}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                adminTab === 'testimonials'
+                  ? 'bg-white text-indigo-700 shadow-sm ring-1 ring-inset ring-gray-200'
+                  : 'text-gray-500 hover:text-gray-800 hover:bg-white/60'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3-3-3z" />
+              </svg>
+              Testimonials
             </button>
           </div>
         </div>
@@ -2049,6 +2129,99 @@ export function Admin() {
               onDeleteExistingProductImage={handleDeleteExistingProductImage}
             />
           </>
+        )}
+
+        {/* Testimonials Tab */}
+        {adminTab === 'testimonials' && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Manage Testimonials</h2>
+            {testimonialMessage && <p className="mb-4 text-sm text-indigo-700 bg-indigo-50 p-3 rounded">{testimonialMessage}</p>}
+
+            {/* Add form */}
+            <div className="mb-8 border border-gray-200 rounded-lg p-5 bg-gray-50">
+              <h3 className="text-base font-semibold text-gray-800 mb-4">Add Testimonial</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Author Name <span className="text-red-500">*</span></label>
+                  <input
+                    value={newTestimonialForm.author_name}
+                    onChange={e => setNewTestimonialForm(prev => ({ ...prev, author_name: e.target.value }))}
+                    placeholder="e.g. Priya S."
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Location <span className="text-gray-400">(optional)</span></label>
+                  <input
+                    value={newTestimonialForm.location}
+                    onChange={e => setNewTestimonialForm(prev => ({ ...prev, location: e.target.value }))}
+                    placeholder="e.g. Bangalore, India"
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Quote <span className="text-red-500">*</span></label>
+                  <textarea
+                    value={newTestimonialForm.text}
+                    onChange={e => setNewTestimonialForm(prev => ({ ...prev, text: e.target.value }))}
+                    rows={3}
+                    placeholder="The customer's words..."
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm resize-y"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddTestimonial}
+                  disabled={isSavingTestimonial || !newTestimonialForm.author_name.trim() || !newTestimonialForm.text.trim()}
+                  className="bg-indigo-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSavingTestimonial ? 'Adding...' : 'Add Testimonial'}
+                </button>
+              </div>
+            </div>
+
+            {/* List */}
+            {isLoadingTestimonials ? (
+              <p className="text-sm text-gray-500">Loading testimonials...</p>
+            ) : testimonials.length === 0 ? (
+              <p className="text-sm text-gray-500">No testimonials yet. Add one above.</p>
+            ) : (
+              <div className="space-y-3">
+                {testimonials.map((t) => (
+                  <div key={t.id} className="border border-gray-200 rounded-lg p-4 flex items-start gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="font-semibold text-gray-900 text-sm">{t.author_name}</span>
+                        {t.location && <span className="text-xs text-gray-500">· {t.location}</span>}
+                        <span className={`ml-auto text-xs px-2 py-0.5 rounded-full font-medium ${
+                          t.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          {t.active ? 'Visible' : 'Hidden'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 line-clamp-3">&ldquo;{t.text}&rdquo;</p>
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleTestimonialActive(t.id, t.active)}
+                        className="text-xs border border-gray-300 rounded px-2 py-1 hover:bg-gray-50 transition"
+                      >
+                        {t.active ? 'Hide' : 'Show'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteTestimonial(t.id)}
+                        className="text-xs border border-red-200 text-red-600 rounded px-2 py-1 hover:bg-red-50 transition"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
         </div>
       </div>
