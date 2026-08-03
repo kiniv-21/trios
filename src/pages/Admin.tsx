@@ -2006,6 +2006,18 @@ export function Admin() {
                       className="w-full border border-gray-300 rounded px-3 py-2"
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Testimonial Carousel Speed (seconds)</label>
+                    <input
+                      type="number"
+                      min="2"
+                      max="30"
+                      value={siteContentEdits.testimonial_carousel_interval ? String(Number(siteContentEdits.testimonial_carousel_interval) / 1000) : '5'}
+                      onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, testimonial_carousel_interval: String(Math.max(2, Number(e.target.value)) * 1000) }))}
+                      className="w-32 border border-gray-300 rounded px-3 py-2"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">How long each testimonial stays visible before rotating. Minimum 2s.</p>
+                  </div>
                 </div>
               </div>
 

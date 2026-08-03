@@ -86,6 +86,7 @@ interface SiteContent {
   social_instagram?: string;
   footer_copyright?: string;
   footer_description?: string;
+  testimonial_carousel_interval?: string;
 }
 
 const defaultSiteContent: SiteContent = {
@@ -305,13 +306,14 @@ function App() {
 
   useEffect(() => {
     if (testimonials.length <= 1) return;
+    const intervalMs = Math.max(2000, Number(siteContent.testimonial_carousel_interval) || 5000);
     const timer = setInterval(() => {
       if (!carouselPausedRef.current) {
         setTestimonialIndex(i => (i + 1) % testimonials.length);
       }
-    }, 5000);
+    }, intervalMs);
     return () => clearInterval(timer);
-  }, [testimonials.length]);
+  }, [testimonials.length, siteContent.testimonial_carousel_interval]);
 
   useEffect(() => {
     document.title = siteContent.site_tab_title || defaultSiteContent.site_tab_title || 'Trios Art';
@@ -752,14 +754,28 @@ function App() {
         )}
 
         {testimonials.length > 0 && (
-          <section className="py-14 sm:py-16 overflow-hidden" id="testimonials">
-            <div className="mx-auto max-w-7xl px-5 sm:px-8 text-center mb-12">
-              <p className="text-sm uppercase tracking-[0.2em] text-[#A67C52]">Customer Stories</p>
-              <h2 className="mt-3 font-heading text-[2.05rem] leading-tight sm:text-5xl">What Our Customers Say</h2>
+          <section className="relative overflow-hidden py-16 sm:py-20" id="testimonials">
+            {/* Warm tinted background */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#F5EDE0] via-[#FAF3EB] to-[#FAF7F2]" />
+            {/* Decorative large quote marks */}
+            <span className="pointer-events-none absolute left-6 top-6 select-none font-serif text-[8rem] leading-none text-[#A67C52]/10 sm:text-[12rem]">&ldquo;</span>
+            <span className="pointer-events-none absolute bottom-6 right-6 select-none font-serif text-[8rem] leading-none text-[#A67C52]/10 sm:text-[12rem]">&rdquo;</span>
+
+            <div className="relative mx-auto max-w-7xl px-5 sm:px-8 text-center mb-14">
+              <span className="inline-block rounded-full bg-[#A67C52]/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[#A67C52]">Customer Stories</span>
+              <h2 className="mt-4 font-heading text-[2.05rem] leading-tight sm:text-5xl">Loved by Our Community</h2>
+              {/* Stars row */}
+              <div className="mt-3 flex items-center justify-center gap-1 text-[#A67C52]">
+                {[...Array(5)].map((_, i) => (
+                  <svg key={i} className="h-5 w-5 fill-current" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
             </div>
 
             <div
-              className="relative h-[300px]"
+              className="relative h-[320px]"
               onMouseEnter={() => { carouselPausedRef.current = true; }}
               onMouseLeave={() => { carouselPausedRef.current = false; }}
             >
@@ -770,6 +786,7 @@ function App() {
                 const abs = Math.abs(offset);
                 const scale = abs === 0 ? 1 : abs === 1 ? 0.82 : 0.65;
                 const opacity = abs === 0 ? 1 : abs === 1 ? 0.6 : 0.3;
+                const isCenter = abs === 0;
                 return (
                   <div
                     key={`slot-${offset}`}
@@ -778,20 +795,37 @@ function App() {
                       position: 'absolute',
                       left: '50%',
                       top: '50%',
-                      width: '320px',
-                      transform: `translateX(calc(-50% + ${offset * 360}px)) translateY(-50%) scale(${scale})`,
+                      width: '340px',
+                      transform: `translateX(calc(-50% + ${offset * 376}px)) translateY(-50%) scale(${scale})`,
                       opacity,
                       zIndex: 10 - abs * 3,
                       transition: 'transform 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease',
                       cursor: abs > 0 ? 'pointer' : 'default',
                     }}
                   >
-                    <div className="rounded-3xl border border-[#E9DDCF] bg-white p-6 shadow-sm">
-                      <p className="font-serif text-4xl leading-none text-[#A67C52]">&ldquo;</p>
-                      <p className="mt-2 line-clamp-5 text-[0.97rem] leading-relaxed text-[#2B2B2B]">{t.text}</p>
-                      <div className="mt-4 border-t border-[#E9DDCF] pt-4">
-                        <p className="font-semibold text-[#2B2B2B]">{t.author_name}</p>
-                        {t.location && <p className="text-sm text-[#A67C52]">{t.location}</p>}
+                    <div className={`rounded-3xl p-7 transition-shadow duration-500 ${
+                      isCenter
+                        ? 'border border-[#D9C8B7] bg-white shadow-[0_20px_50px_rgba(166,124,82,0.18)]'
+                        : 'border border-[#EDE3D8] bg-white/80 shadow-sm'
+                    }`}>
+                      {/* Stars on each card */}
+                      <div className="mb-3 flex gap-0.5 text-[#A67C52]">
+                        {[...Array(5)].map((_, i) => (
+                          <svg key={i} className="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                      <p className="font-serif text-5xl leading-none text-[#A67C52]">&ldquo;</p>
+                      <p className="mt-1 line-clamp-5 text-[0.97rem] leading-relaxed text-[#2B2B2B]">{t.text}</p>
+                      <div className="mt-5 flex items-center gap-3 border-t border-[#EDE3D8] pt-4">
+                        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#F3E7D9] text-sm font-bold text-[#A67C52]">
+                          {t.author_name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-[#2B2B2B]">{t.author_name}</p>
+                          {t.location && <p className="text-xs text-[#A67C52]">{t.location}</p>}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -800,10 +834,10 @@ function App() {
             </div>
 
             {testimonials.length > 1 && (
-              <div className="mt-6 flex items-center justify-center gap-3">
+              <div className="relative mt-8 flex items-center justify-center gap-3">
                 <button
                   onClick={() => setTestimonialIndex(i => (i - 1 + testimonials.length) % testimonials.length)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-[#D9C8B7] bg-white text-[#A67C52] text-lg transition hover:bg-[#F7F1E8]"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#A67C52] text-xl shadow-sm ring-1 ring-[#D9C8B7] transition hover:bg-[#A67C52] hover:text-white hover:shadow-md"
                   aria-label="Previous testimonial"
                 >
                   &#8249;
@@ -812,15 +846,15 @@ function App() {
                   <button
                     key={i}
                     onClick={() => setTestimonialIndex(i)}
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      i === testimonialIndex ? 'w-6 bg-[#A67C52]' : 'w-2 bg-[#D9C8B7]'
+                    className={`rounded-full transition-all duration-300 ${
+                      i === testimonialIndex ? 'h-2.5 w-7 bg-[#A67C52]' : 'h-2 w-2 bg-[#C4A882]'
                     }`}
                     aria-label={`Go to testimonial ${i + 1}`}
                   />
                 ))}
                 <button
                   onClick={() => setTestimonialIndex(i => (i + 1) % testimonials.length)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-[#D9C8B7] bg-white text-[#A67C52] text-lg transition hover:bg-[#F7F1E8]"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#A67C52] text-xl shadow-sm ring-1 ring-[#D9C8B7] transition hover:bg-[#A67C52] hover:text-white hover:shadow-md"
                   aria-label="Next testimonial"
                 >
                   &#8250;
