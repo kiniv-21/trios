@@ -219,6 +219,128 @@ const getProductStory = (product: Product) => ({
   customization: product.customizationText ?? DEFAULT_CUSTOMIZATION_TEXT,
 });
 
+const W = '#A67C52';
+
+const getWarliSceneIndex = (id: string): number => {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) {
+    h = (Math.imul(31, h) + id.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h) % 5;
+};
+
+const WARLI_SCENES = [
+  /* 0: Three dancers holding hands */
+  <svg key="w0" viewBox="0 0 140 44" className="h-9 w-auto" stroke={W} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" aria-hidden="true">
+    <circle cx="22" cy="6" r="4" fill={W} stroke="none"/>
+    <polygon points="22,10 15,24 29,24" fill={W} stroke="none"/>
+    <line x1="19" y1="15" x2="11" y2="8"/>
+    <line x1="15" y1="24" x2="13" y2="36"/>
+    <line x1="29" y1="24" x2="27" y2="36"/>
+    <circle cx="70" cy="6" r="4" fill={W} stroke="none"/>
+    <polygon points="70,10 63,24 77,24" fill={W} stroke="none"/>
+    <line x1="63" y1="24" x2="61" y2="36"/>
+    <line x1="77" y1="24" x2="75" y2="36"/>
+    <circle cx="118" cy="6" r="4" fill={W} stroke="none"/>
+    <polygon points="118,10 111,24 125,24" fill={W} stroke="none"/>
+    <line x1="121" y1="15" x2="129" y2="8"/>
+    <line x1="111" y1="24" x2="109" y2="36"/>
+    <line x1="125" y1="24" x2="123" y2="36"/>
+    <line x1="25" y1="15" x2="67" y2="15"/>
+    <line x1="73" y1="15" x2="115" y2="15"/>
+  </svg>,
+  /* 1: Two figures with tree */
+  <svg key="w1" viewBox="0 0 140 44" className="h-9 w-auto" stroke={W} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" aria-hidden="true">
+    <circle cx="25" cy="6" r="4" fill={W} stroke="none"/>
+    <polygon points="25,10 18,24 32,24" fill={W} stroke="none"/>
+    <line x1="22" y1="16" x2="12" y2="9"/>
+    <line x1="28" y1="16" x2="46" y2="16"/>
+    <line x1="18" y1="24" x2="16" y2="36"/>
+    <line x1="32" y1="24" x2="30" y2="36"/>
+    <line x1="70" y1="18" x2="70" y2="38"/>
+    <line x1="70" y1="23" x2="58" y2="14"/>
+    <line x1="70" y1="23" x2="82" y2="14"/>
+    <circle cx="62" cy="11" r="3.5" fill={W} stroke="none"/>
+    <circle cx="78" cy="11" r="3.5" fill={W} stroke="none"/>
+    <circle cx="70" cy="7" r="3.5" fill={W} stroke="none"/>
+    <circle cx="115" cy="6" r="4" fill={W} stroke="none"/>
+    <polygon points="115,10 108,24 122,24" fill={W} stroke="none"/>
+    <line x1="118" y1="16" x2="128" y2="9"/>
+    <line x1="112" y1="16" x2="94" y2="16"/>
+    <line x1="108" y1="24" x2="106" y2="36"/>
+    <line x1="122" y1="24" x2="120" y2="36"/>
+  </svg>,
+  /* 2: Four figures dancing in a row */
+  <svg key="w2" viewBox="0 0 140 44" className="h-9 w-auto" stroke={W} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" aria-hidden="true">
+    <circle cx="16" cy="7" r="3.5" fill={W} stroke="none"/>
+    <polygon points="16,11 10,22 22,22" fill={W} stroke="none"/>
+    <line x1="13" y1="15" x2="6" y2="9"/>
+    <line x1="10" y1="22" x2="8" y2="33"/>
+    <line x1="22" y1="22" x2="20" y2="33"/>
+    <circle cx="48" cy="7" r="3.5" fill={W} stroke="none"/>
+    <polygon points="48,11 42,22 54,22" fill={W} stroke="none"/>
+    <line x1="42" y1="22" x2="40" y2="33"/>
+    <line x1="54" y1="22" x2="52" y2="33"/>
+    <circle cx="92" cy="7" r="3.5" fill={W} stroke="none"/>
+    <polygon points="92,11 86,22 98,22" fill={W} stroke="none"/>
+    <line x1="86" y1="22" x2="84" y2="33"/>
+    <line x1="98" y1="22" x2="96" y2="33"/>
+    <circle cx="124" cy="7" r="3.5" fill={W} stroke="none"/>
+    <polygon points="124,11 118,22 130,22" fill={W} stroke="none"/>
+    <line x1="127" y1="15" x2="134" y2="9"/>
+    <line x1="118" y1="22" x2="116" y2="33"/>
+    <line x1="130" y1="22" x2="128" y2="33"/>
+    <line x1="19" y1="15" x2="45" y2="15"/>
+    <line x1="51" y1="15" x2="89" y2="15"/>
+    <line x1="95" y1="15" x2="121" y2="15"/>
+  </svg>,
+  /* 3: Two figures around a sun motif */
+  <svg key="w3" viewBox="0 0 140 44" className="h-9 w-auto" stroke={W} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" aria-hidden="true">
+    <circle cx="70" cy="22" r="5" fill={W} stroke="none"/>
+    <line x1="70" y1="9" x2="70" y2="13"/>
+    <line x1="70" y1="31" x2="70" y2="35"/>
+    <line x1="57" y1="22" x2="61" y2="22"/>
+    <line x1="79" y1="22" x2="83" y2="22"/>
+    <line x1="61" y1="13" x2="64" y2="16"/>
+    <line x1="79" y1="13" x2="76" y2="16"/>
+    <line x1="61" y1="31" x2="64" y2="28"/>
+    <line x1="79" y1="31" x2="76" y2="28"/>
+    <circle cx="24" cy="6" r="4" fill={W} stroke="none"/>
+    <polygon points="24,10 17,24 31,24" fill={W} stroke="none"/>
+    <line x1="21" y1="16" x2="12" y2="10"/>
+    <line x1="27" y1="16" x2="42" y2="16"/>
+    <line x1="17" y1="24" x2="15" y2="36"/>
+    <line x1="31" y1="24" x2="29" y2="36"/>
+    <circle cx="116" cy="6" r="4" fill={W} stroke="none"/>
+    <polygon points="116,10 109,24 123,24" fill={W} stroke="none"/>
+    <line x1="119" y1="16" x2="128" y2="10"/>
+    <line x1="113" y1="16" x2="98" y2="16"/>
+    <line x1="109" y1="24" x2="107" y2="36"/>
+    <line x1="123" y1="24" x2="121" y2="36"/>
+  </svg>,
+  /* 4: Family — tall parent with two small children */
+  <svg key="w4" viewBox="0 0 140 44" className="h-9 w-auto" stroke={W} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" aria-hidden="true">
+    <circle cx="70" cy="4" r="5" fill={W} stroke="none"/>
+    <polygon points="70,9 60,26 80,26" fill={W} stroke="none"/>
+    <line x1="64" y1="17" x2="50" y2="13"/>
+    <line x1="76" y1="17" x2="90" y2="13"/>
+    <line x1="60" y1="26" x2="58" y2="38"/>
+    <line x1="80" y1="26" x2="78" y2="38"/>
+    <circle cx="34" cy="13" r="3" fill={W} stroke="none"/>
+    <polygon points="34,17 28,27 40,27" fill={W} stroke="none"/>
+    <line x1="37" y1="21" x2="48" y2="14"/>
+    <line x1="31" y1="21" x2="24" y2="16"/>
+    <line x1="28" y1="27" x2="26" y2="37"/>
+    <line x1="40" y1="27" x2="38" y2="37"/>
+    <circle cx="106" cy="13" r="3" fill={W} stroke="none"/>
+    <polygon points="106,17 100,27 112,27" fill={W} stroke="none"/>
+    <line x1="103" y1="21" x2="92" y2="14"/>
+    <line x1="109" y1="21" x2="116" y2="16"/>
+    <line x1="100" y1="27" x2="98" y2="37"/>
+    <line x1="112" y1="27" x2="110" y2="37"/>
+  </svg>,
+];
+
 function App() {
   const [products, setProducts] = useState<Product[]>(staticProducts);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
@@ -808,16 +930,12 @@ function App() {
                         ? 'border border-[#D9C8B7] bg-white shadow-[0_20px_50px_rgba(166,124,82,0.18)]'
                         : 'border border-[#EDE3D8] bg-white/80 shadow-sm'
                     }`}>
-                      {/* Stars on each card */}
-                      <div className="mb-3 flex gap-0.5 text-[#A67C52]">
-                        {[...Array(5)].map((_, i) => (
-                          <svg key={i} className="h-3.5 w-3.5 fill-current" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
+                      {/* Warli art — centered, deterministic per testimonial */}
+                      <div className="mb-3 flex justify-center">
+                        {WARLI_SCENES[getWarliSceneIndex(t.id)]}
                       </div>
                       <p className="font-serif text-5xl leading-none text-[#A67C52]">&ldquo;</p>
-                      <p className="mt-1 line-clamp-5 text-[0.97rem] leading-relaxed text-[#2B2B2B]">{t.text}</p>
+                      <p className="-mt-3 line-clamp-5 text-[0.97rem] leading-relaxed text-[#2B2B2B]">{t.text}</p>
                       <div className="mt-5 flex items-center gap-3 border-t border-[#EDE3D8] pt-4">
                         <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#F3E7D9] text-sm font-bold text-[#A67C52]">
                           {t.author_name.charAt(0).toUpperCase()}
