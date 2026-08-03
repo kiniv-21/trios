@@ -751,55 +751,6 @@ function App() {
           </>
         )}
 
-        <section className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16" id="about">
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-center">
-            <div>
-              <p className="text-sm uppercase tracking-[0.2em] text-[#A67C52]">About Trios Art</p>
-              <h2 className="mt-3 font-heading text-[2.05rem] leading-tight sm:text-5xl">{siteContent.about_title}</h2>
-              <p className="mt-5 text-[1.02rem] leading-relaxed text-[#6B6B6B] sm:text-lg">{siteContent.about_description}</p>
-            </div>
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-[#E9DDCF] bg-white p-5">
-                <h3 className="font-heading text-2xl">{siteContent.about_bullet_1_title}</h3>
-                <p className="mt-2 text-[#6B6B6B]">{siteContent.about_bullet_1_desc}</p>
-              </div>
-              <div className="rounded-2xl border border-[#E9DDCF] bg-white p-5">
-                <h3 className="font-heading text-2xl">{siteContent.about_bullet_2_title}</h3>
-                <p className="mt-2 text-[#6B6B6B]">{siteContent.about_bullet_2_desc}</p>
-              </div>
-              <div className="rounded-2xl border border-[#E9DDCF] bg-white p-5">
-                <h3 className="font-heading text-2xl">Local Artistry, Unique Creations</h3>
-                <p className="mt-2 text-[#6B6B6B]">
-                  Every creation is intentionally unique, balancing practical use with artistic expression.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16" id="process">
-          <p className="text-sm uppercase tracking-[0.2em] text-[#A67C52]">Our Process</p>
-          <h2 className="mt-3 font-heading text-[2.05rem] leading-tight sm:text-5xl">{siteContent.process_title || 'From Idea to Hand-Finished Piece'}</h2>
-          {siteContent.process_description && (
-            <p className="mt-4 max-w-3xl text-[1.02rem] leading-relaxed text-[#6B6B6B]">{siteContent.process_description}</p>
-          )}
-
-          <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-5">
-            {processSteps.map((step, index) => {
-              const Icon = step.icon;
-              return (
-                <div key={step.label} className="rounded-2xl border border-[#E9DDCF] bg-white p-5 text-center">
-                  <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[#F3E7D9] text-[#A67C52]">
-                    <Icon size={20} />
-                  </div>
-                  <p className="text-xs uppercase tracking-[0.12em] text-[#A67C52]">Step {index + 1}</p>
-                  <h3 className="mt-2 font-heading text-xl">{step.label}</h3>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
         {testimonials.length > 0 && (
           <section className="py-14 sm:py-16 overflow-hidden" id="testimonials">
             <div className="mx-auto max-w-7xl px-5 sm:px-8 text-center mb-12">
@@ -878,6 +829,55 @@ function App() {
             )}
           </section>
         )}
+
+        <section className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16" id="about">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:items-center">
+            <div>
+              <p className="text-sm uppercase tracking-[0.2em] text-[#A67C52]">About Trios Art</p>
+              <h2 className="mt-3 font-heading text-[2.05rem] leading-tight sm:text-5xl">{siteContent.about_title}</h2>
+              <p className="mt-5 text-[1.02rem] leading-relaxed text-[#6B6B6B] sm:text-lg">{siteContent.about_description}</p>
+            </div>
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-[#E9DDCF] bg-white p-5">
+                <h3 className="font-heading text-2xl">{siteContent.about_bullet_1_title}</h3>
+                <p className="mt-2 text-[#6B6B6B]">{siteContent.about_bullet_1_desc}</p>
+              </div>
+              <div className="rounded-2xl border border-[#E9DDCF] bg-white p-5">
+                <h3 className="font-heading text-2xl">{siteContent.about_bullet_2_title}</h3>
+                <p className="mt-2 text-[#6B6B6B]">{siteContent.about_bullet_2_desc}</p>
+              </div>
+              <div className="rounded-2xl border border-[#E9DDCF] bg-white p-5">
+                <h3 className="font-heading text-2xl">Local Artistry, Unique Creations</h3>
+                <p className="mt-2 text-[#6B6B6B]">
+                  Every creation is intentionally unique, balancing practical use with artistic expression.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16" id="process">
+          <p className="text-sm uppercase tracking-[0.2em] text-[#A67C52]">Our Process</p>
+          <h2 className="mt-3 font-heading text-[2.05rem] leading-tight sm:text-5xl">{siteContent.process_title || 'From Idea to Hand-Finished Piece'}</h2>
+          {siteContent.process_description && (
+            <p className="mt-4 max-w-3xl text-[1.02rem] leading-relaxed text-[#6B6B6B]">{siteContent.process_description}</p>
+          )}
+
+          <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-5">
+            {processSteps.map((step, index) => {
+              const Icon = step.icon;
+              return (
+                <div key={step.label} className="rounded-2xl border border-[#E9DDCF] bg-white p-5 text-center">
+                  <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[#F3E7D9] text-[#A67C52]">
+                    <Icon size={20} />
+                  </div>
+                  <p className="text-xs uppercase tracking-[0.12em] text-[#A67C52]">Step {index + 1}</p>
+                  <h3 className="mt-2 font-heading text-xl">{step.label}</h3>
+                </div>
+              );
+            })}
+          </div>
+        </section>
 
         <section className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-16" id="contact">
           <div className="rounded-3xl border border-[#E9DDCF] bg-white p-8 sm:p-10">
