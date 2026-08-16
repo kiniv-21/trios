@@ -479,12 +479,25 @@ function App() {
     ]
   );
 
+  const updateProductUrl = (product?: Product) => {
+    const url = new URL(window.location.href);
+
+    if (product) {
+      url.searchParams.set('product', product.productCode || product.id);
+    } else {
+      url.searchParams.delete('product');
+    }
+
+    window.history.replaceState({}, '', url);
+  };
+
   const openCategory = (category: CategoryOption) => {
     setSelectedCategory(category);
     setSelectedProduct(null);
     setSelectedImageIndex(0);
     setAnimateProducts(false);
     setAnimateShowcase(false);
+    updateProductUrl();
 
     requestAnimationFrame(() => {
       setAnimateProducts(true);
@@ -495,9 +508,15 @@ function App() {
   };
 
   const openProduct = (product: Product) => {
+    const categoryId = normalizeCategoryId(product.category);
+    const category = mergedCategories.find((item) => item.id === categoryId)
+      || { id: categoryId, name: formatCategoryName(categoryId) };
+
+    setSelectedCategory(category);
     setSelectedProduct(product);
     setSelectedImageIndex(0);
     setAnimateShowcase(false);
+    updateProductUrl(product);
 
     requestAnimationFrame(() => {
       setAnimateShowcase(true);
@@ -506,6 +525,22 @@ function App() {
       }, 140);
     });
   };
+
+  useEffect(() => {
+    const productReference = new URLSearchParams(window.location.search).get('product');
+    if (
+      isLoadingProducts
+      || !productReference
+      || products.length === 0
+      || selectedProduct?.id === productReference
+      || selectedProduct?.productCode === productReference
+    ) {
+      return;
+    }
+
+    const product = products.find((item) => item.id === productReference || item.productCode === productReference);
+    if (product) openProduct(product);
+  }, [isLoadingProducts, products, selectedProduct?.id]);
 
   const selectedProductCategoryName = selectedProduct
     ? mergedCategories.find((category) => category.id === normalizeCategoryId(selectedProduct.category))?.name
@@ -555,6 +590,7 @@ function App() {
             onClick={() => {
               setSelectedCategory(null);
               setSelectedProduct(null);
+              updateProductUrl();
             }}
           >
             <Palette className="h-7 w-7 text-[#A67C52]" />
