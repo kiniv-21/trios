@@ -515,10 +515,12 @@ function App() {
     setSelectedCategory(category);
     setSelectedProduct(product);
     setSelectedImageIndex(0);
+    setAnimateProducts(false);
     setAnimateShowcase(false);
     updateProductUrl(product);
 
     requestAnimationFrame(() => {
+      setAnimateProducts(true);
       setAnimateShowcase(true);
       setTimeout(() => {
         document.getElementById('product-showcase')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
