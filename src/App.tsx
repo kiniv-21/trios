@@ -308,6 +308,9 @@ function App() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [animateProducts, setAnimateProducts] = useState(false);
   const [animateShowcase, setAnimateShowcase] = useState(false);
+  const [productReferenceFromUrl, setProductReferenceFromUrl] = useState(
+    () => new URLSearchParams(window.location.search).get('product')
+  );
 
   const productSectionRef = useRef<HTMLElement | null>(null);
   const carouselPausedRef = useRef(false);
@@ -489,6 +492,7 @@ function App() {
     }
 
     window.history.replaceState({}, '', url);
+    setProductReferenceFromUrl(url.searchParams.get('product'));
   };
 
   const openCategory = (category: CategoryOption) => {
@@ -529,20 +533,30 @@ function App() {
   };
 
   useEffect(() => {
-    const productReference = new URLSearchParams(window.location.search).get('product');
+    const handleLocationChange = () => {
+      setProductReferenceFromUrl(new URLSearchParams(window.location.search).get('product'));
+    };
+
+    window.addEventListener('popstate', handleLocationChange);
+    return () => window.removeEventListener('popstate', handleLocationChange);
+  }, []);
+
+  useEffect(() => {
     if (
       isLoadingProducts
-      || !productReference
+      || !productReferenceFromUrl
       || products.length === 0
-      || selectedProduct?.id === productReference
-      || selectedProduct?.productCode === productReference
+      || selectedProduct?.id === productReferenceFromUrl
+      || selectedProduct?.productCode === productReferenceFromUrl
     ) {
       return;
     }
 
-    const product = products.find((item) => item.id === productReference || item.productCode === productReference);
+    const product = products.find(
+      (item) => item.id === productReferenceFromUrl || item.productCode === productReferenceFromUrl
+    );
     if (product) openProduct(product);
-  }, [isLoadingProducts, products, selectedProduct?.id]);
+  }, [isLoadingProducts, productReferenceFromUrl, products, selectedProduct?.id]);
 
   const selectedProductCategoryName = selectedProduct
     ? mergedCategories.find((category) => category.id === normalizeCategoryId(selectedProduct.category))?.name
