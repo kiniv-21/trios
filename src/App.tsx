@@ -515,6 +515,7 @@ function App() {
   const selectedProductReference = selectedProduct?.productCode || selectedProduct?.id || '';
   const isSelectedProductOutOfStock = Boolean(selectedProduct && !selectedProduct.inStock);
   const selectedProductStory = selectedProduct ? getProductStory(selectedProduct) : null;
+  const currentPageUrl = window.location.href;
 
   const whatsappMessage = selectedProduct
     ? [
@@ -523,6 +524,7 @@ function App() {
       `Category: ${selectedProductCategoryName}`,
       `Price: ${formatPriceINR(selectedProduct.price)}`,
       `Product ID: ${selectedProductReference}`,
+      `URL: ${currentPageUrl}`,
     ].join('\n')
     : selectedCategory
       ? `Hi Trios Art, I would like to explore ${selectedCategory.name}.`
