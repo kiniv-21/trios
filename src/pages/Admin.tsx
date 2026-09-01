@@ -146,6 +146,9 @@ const formatCategoryName = (id: string) =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 
+const isContentVisible = (value: string | undefined, defaultValue: boolean) =>
+  value === undefined ? defaultValue : value === 'true';
+
 const getCategoryCodePrefix = (categoryId: string) => {
   const normalized = normalizeCategoryId(categoryId);
   if (!normalized) return 'PRD';
@@ -252,6 +255,13 @@ export function Admin() {
   const [testimonialMessage, setTestimonialMessage] = useState('');
 
   const newProductFolder = toFolderName(form.name);
+
+  const toggleContentVisibility = (key: string, defaultValue: boolean) => {
+    setSiteContentEdits((previous) => ({
+      ...previous,
+      [key]: isContentVisible(previous[key], defaultValue) ? 'false' : 'true',
+    }));
+  };
 
   const sortedProducts = useMemo(() => {
     return [...products].sort((a, b) => a.name.localeCompare(b.name));
@@ -1889,6 +1899,13 @@ export function Admin() {
                         className="w-full border border-gray-300 rounded px-3 py-2"
                         placeholder="+91 98454 98171"
                       />
+                      <button
+                        type="button"
+                        onClick={() => toggleContentVisibility('show_whatsapp', true)}
+                        className="mt-2 text-sm font-medium text-gray-700 underline"
+                      >
+                        {isContentVisible(siteContentEdits.show_whatsapp, true) ? 'Hide' : 'Unhide'} from storefront
+                      </button>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -1897,6 +1914,13 @@ export function Admin() {
                         onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_email: e.target.value }))}
                         className="w-full border border-gray-300 rounded px-3 py-2"
                       />
+                      <button
+                        type="button"
+                        onClick={() => toggleContentVisibility('show_contact_email', false)}
+                        className="mt-2 text-sm font-medium text-gray-700 underline"
+                      >
+                        {isContentVisible(siteContentEdits.show_contact_email, false) ? 'Hide' : 'Unhide'} from storefront
+                      </button>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
@@ -1905,6 +1929,13 @@ export function Admin() {
                         onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_phone: e.target.value }))}
                         className="w-full border border-gray-300 rounded px-3 py-2"
                       />
+                      <button
+                        type="button"
+                        onClick={() => toggleContentVisibility('show_contact_phone', true)}
+                        className="mt-2 text-sm font-medium text-gray-700 underline"
+                      >
+                        {isContentVisible(siteContentEdits.show_contact_phone, true) ? 'Hide' : 'Unhide'} from storefront
+                      </button>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
@@ -1913,6 +1944,13 @@ export function Admin() {
                         onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, contact_location: e.target.value }))}
                         className="w-full border border-gray-300 rounded px-3 py-2"
                       />
+                      <button
+                        type="button"
+                        onClick={() => toggleContentVisibility('show_contact_location', true)}
+                        className="mt-2 text-sm font-medium text-gray-700 underline"
+                      >
+                        {isContentVisible(siteContentEdits.show_contact_location, true) ? 'Hide' : 'Unhide'} from storefront
+                      </button>
                     </div>
                   </div>
                 </div>

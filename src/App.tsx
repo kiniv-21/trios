@@ -74,8 +74,12 @@ interface SiteContent {
   contact_description?: string;
   whatsapp_number?: string;
   contact_email?: string;
+  show_contact_email?: string;
   contact_phone?: string;
+  show_contact_phone?: string;
   contact_location?: string;
+  show_contact_location?: string;
+  show_whatsapp?: string;
   process_title?: string;
   process_description?: string;
   process_step_1?: string;
@@ -107,8 +111,12 @@ const defaultSiteContent: SiteContent = {
   contact_description: 'Start a conversation to commission, customize, or reserve a piece.',
   whatsapp_number: '+91 98454 98171',
   contact_email: 'info@triosart.com',
+  show_contact_email: 'false',
   contact_phone: '+91 98454 98171',
+  show_contact_phone: 'true',
   contact_location: 'Bengaluru, Karnataka, India',
+  show_contact_location: 'true',
+  show_whatsapp: 'true',
   process_title: 'From Idea to Hand-Finished Piece',
   process_description: '',
   process_step_1: 'Concept',
@@ -160,6 +168,9 @@ const formatPriceINR = (price: number) =>
     currency: 'INR',
     maximumFractionDigits: 0,
   }).format(Number.isFinite(price) ? price : 0);
+
+const isContentVisible = (value: string | undefined, defaultValue: boolean) =>
+  value === undefined ? defaultValue : value === 'true';
 
 const parseStoredCategories = (rawValue?: string): CategoryOption[] => {
   if (!rawValue) return [];
@@ -586,6 +597,10 @@ function App() {
   const instagramLink = siteContent.social_instagram || '#';
   const emailLink = `mailto:${siteContent.contact_email || 'info@triosart.com'}`;
   const phoneLink = `tel:${(siteContent.contact_phone || '+919845498171').replace(/\s+/g, '')}`;
+  const showWhatsApp = isContentVisible(siteContent.show_whatsapp, true);
+  const showEmail = isContentVisible(siteContent.show_contact_email, false);
+  const showPhone = isContentVisible(siteContent.show_contact_phone, true);
+  const showLocation = isContentVisible(siteContent.show_contact_location, true);
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-[#2B2B2B]">
@@ -1048,16 +1063,18 @@ function App() {
             <p className="mt-4 max-w-2xl text-[1.02rem] leading-relaxed text-[#6B6B6B]">{siteContent.contact_description}</p>
 
             <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <a
-                href={whatsappLink}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-2xl border border-[#D9C8B7] bg-[#F8F2EA] p-5 transition hover:shadow-md"
-              >
-                <MessageCircle className="mb-3 text-[#A67C52]" />
-                <h3 className="font-heading text-2xl">WhatsApp</h3>
-                <p className="mt-1 text-sm text-[#6B6B6B]">Start an inquiry instantly</p>
-              </a>
+              {showWhatsApp && (
+                <a
+                  href={whatsappLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-2xl border border-[#D9C8B7] bg-[#F8F2EA] p-5 transition hover:shadow-md"
+                >
+                  <MessageCircle className="mb-3 text-[#A67C52]" />
+                  <h3 className="font-heading text-2xl">WhatsApp</h3>
+                  <p className="mt-1 text-sm text-[#6B6B6B]">Start an inquiry instantly</p>
+                </a>
+              )}
 
               <a
                 href={instagramLink}
@@ -1070,20 +1087,26 @@ function App() {
                 <p className="mt-1 text-sm text-[#6B6B6B]">Message on social</p>
               </a>
 
-              <a href={emailLink} className="rounded-2xl border border-[#E9DDCF] p-5 transition hover:shadow-md">
-                <Mail className="mb-3 text-[#A67C52]" />
-                <h3 className="font-heading text-2xl">Email</h3>
-                <p className="mt-1 text-sm text-[#6B6B6B]">{siteContent.contact_email}</p>
-              </a>
+              {showEmail && (
+                <a href={emailLink} className="rounded-2xl border border-[#E9DDCF] p-5 transition hover:shadow-md">
+                  <Mail className="mb-3 text-[#A67C52]" />
+                  <h3 className="font-heading text-2xl">Email</h3>
+                  <p className="mt-1 text-sm text-[#6B6B6B]">{siteContent.contact_email}</p>
+                </a>
+              )}
 
-              <a href={phoneLink} className="rounded-2xl border border-[#E9DDCF] p-5 transition hover:shadow-md">
-                <Phone className="mb-3 text-[#A67C52]" />
-                <h3 className="font-heading text-2xl">Phone</h3>
-                <p className="mt-1 text-sm text-[#6B6B6B]">{siteContent.contact_phone}</p>
-              </a>
+              {showPhone && (
+                <a href={phoneLink} className="rounded-2xl border border-[#E9DDCF] p-5 transition hover:shadow-md">
+                  <Phone className="mb-3 text-[#A67C52]" />
+                  <h3 className="font-heading text-2xl">Phone</h3>
+                  <p className="mt-1 text-sm text-[#6B6B6B]">{siteContent.contact_phone}</p>
+                </a>
+              )}
             </div>
 
-            <p className="mt-6 text-sm text-[#6B6B6B]">{siteContent.contact_location}</p>
+            {showLocation && (
+              <p className="mt-6 text-sm text-[#6B6B6B]">{siteContent.contact_location}</p>
+            )}
           </div>
         </section>
 
