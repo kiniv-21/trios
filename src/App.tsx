@@ -922,7 +922,7 @@ function App() {
             </div>
 
             <div
-              className="relative h-[320px]"
+              className="relative flex min-h-[320px] items-center justify-center"
               onMouseEnter={() => { carouselPausedRef.current = true; }}
               onMouseLeave={() => { carouselPausedRef.current = false; }}
             >
@@ -939,11 +939,11 @@ function App() {
                     key={`slot-${offset}`}
                     onClick={abs > 0 ? () => setTestimonialIndex(idx) : undefined}
                     style={{
-                      position: 'absolute',
-                      left: '50%',
-                      top: '50%',
-                      width: '340px',
-                      transform: `translateX(calc(-50% + ${offset * 376}px)) translateY(-50%) scale(${scale})`,
+                      position: isCenter ? 'relative' : 'absolute',
+                      left: isCenter ? undefined : '50%',
+                      top: isCenter ? undefined : '50%',
+                      width: isCenter ? 'min(640px, calc(100vw - 2rem))' : '340px',
+                      transform: isCenter ? 'none' : `translateX(calc(-50% + ${offset * 376}px)) translateY(-50%) scale(${scale})`,
                       opacity,
                       zIndex: 10 - abs * 3,
                       transition: 'transform 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease',
@@ -960,7 +960,7 @@ function App() {
                         {WARLI_SCENES[getWarliSceneIndex(t.id)]}
                       </div>
                       <p className="font-serif text-5xl leading-none text-[#A67C52]">&ldquo;</p>
-                      <p className="-mt-3 line-clamp-5 text-[0.97rem] leading-relaxed text-[#2B2B2B]">{t.text}</p>
+                      <p className={`-mt-3 text-[0.97rem] leading-relaxed text-[#2B2B2B] ${isCenter ? '' : 'line-clamp-5'}`}>{t.text}</p>
                       <div className="mt-5 flex items-center gap-3 border-t border-[#EDE3D8] pt-4">
                         <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#F3E7D9] text-sm font-bold text-[#A67C52]">
                           {t.author_name.charAt(0).toUpperCase()}
