@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createClient, type Session } from '@supabase/supabase-js';
+import { Minus, Plus } from 'lucide-react';
 import { products as staticProducts, categories as defaultCategories } from '../data/products';
 import { Product } from '../types';
 import { CategoryManager } from './admin/components/CategoryManager';
@@ -256,6 +257,17 @@ export function Admin() {
   const [testimonialMessage, setTestimonialMessage] = useState('');
 
   const newProductFolder = toFolderName(form.name);
+  const logoSizePx = Math.min(80, Math.max(32, Number(siteContentEdits.logo_size_px) || 56));
+
+  const adjustLogoSize = (amount: number) => {
+    setSiteContentEdits((previous) => {
+      const currentSize = Math.min(80, Math.max(32, Number(previous.logo_size_px) || 56));
+      return {
+        ...previous,
+        logo_size_px: String(Math.min(80, Math.max(32, currentSize + amount))),
+      };
+    });
+  };
 
   const toggleContentVisibility = (key: string, defaultValue: boolean) => {
     setSiteContentEdits((previous) => ({
@@ -1782,11 +1794,12 @@ export function Admin() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Brand Logo</label>
                     <div className="flex flex-wrap items-center gap-4">
-                      <div className="flex h-20 w-20 items-center justify-center border border-gray-200 bg-gray-50 p-2">
+                      <div className="relative flex h-36 w-36 items-center justify-center border border-gray-200 bg-gray-50">
                         <img
                           src={siteContentEdits.logo_url || `${import.meta.env.BASE_URL}trios-art-logo.jpeg`}
                           alt="Brand logo preview"
-                          className="h-full w-full object-contain"
+                          className="absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2 object-contain"
+                          style={{ width: `${logoSizePx}px`, height: `${logoSizePx}px` }}
                         />
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
@@ -1812,6 +1825,30 @@ export function Admin() {
                       </div>
                     </div>
                     <p className="mt-2 text-xs text-gray-500">JPEG, PNG, WebP, or GIF. Maximum 7 MB. Save Page Content to apply changes.</p>
+                    <div className="mt-3 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => adjustLogoSize(-1)}
+                        disabled={logoSizePx <= 32}
+                        aria-label="Decrease logo size"
+                        title="Decrease logo size"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                      >
+                        <Minus size={16} />
+                      </button>
+                      <span className="min-w-16 text-center text-sm tabular-nums">{logoSizePx} px</span>
+                      <button
+                        type="button"
+                        onClick={() => adjustLogoSize(1)}
+                        disabled={logoSizePx >= 80}
+                        aria-label="Increase logo size"
+                        title="Increase logo size"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                      >
+                        <Plus size={16} />
+                      </button>
+                      <span className="text-xs text-gray-500">1 px (about 0.25 mm) per step</span>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Browser Tab Title</label>

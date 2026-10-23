@@ -59,6 +59,7 @@ interface CategoryOption {
 interface SiteContent {
   brand_name?: string;
   logo_url?: string;
+  logo_size_px?: string;
   site_tab_title?: string;
   site_meta_description?: string;
   hero_title?: string;
@@ -608,6 +609,7 @@ function App() {
   const showEmail = isContentVisible(siteContent.show_contact_email, false);
   const showPhone = isContentVisible(siteContent.show_contact_phone, true);
   const showLocation = isContentVisible(siteContent.show_contact_location, true);
+  const logoSizePx = Math.min(80, Math.max(32, Number(siteContent.logo_size_px) || 56));
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-[#2B2B2B]">
@@ -631,11 +633,14 @@ function App() {
               updateProductUrl();
             }}
           >
-            <img
-              src={siteContent.logo_url || `${import.meta.env.BASE_URL}trios-art-logo.jpeg`}
-              alt={siteContent.brand_name || 'Trios Art'}
-              className="h-14 w-14 shrink-0 object-contain"
-            />
+            <span className="relative flex h-14 w-14 shrink-0 items-center justify-center">
+              <img
+                src={siteContent.logo_url || `${import.meta.env.BASE_URL}trios-art-logo.jpeg`}
+                alt={siteContent.brand_name || 'Trios Art'}
+                className="absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2 object-contain"
+                style={{ width: `${logoSizePx}px`, height: `${logoSizePx}px` }}
+              />
+            </span>
           </button>
           <a
             href={whatsappLink}
