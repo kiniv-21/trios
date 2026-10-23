@@ -237,6 +237,7 @@ export function Admin() {
   const [siteContentEdits, setSiteContentEdits] = useState<Record<string, string>>({});
   const [savedSiteContent, setSavedSiteContent] = useState<Record<string, string>>({});
   const [isSavingSiteContent, setIsSavingSiteContent] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [adminTab, setAdminTab] = useState<'content' | 'products' | 'testimonials'>('content');
   const [customCategories, setCustomCategories] = useState<CategoryOption[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -683,6 +684,48 @@ export function Admin() {
       }
     } finally {
       setIsUploadingImages(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleUploadLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!supabase) {
+      setMessage('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+      e.target.value = '';
+      return;
+    }
+
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setMessage(validationError);
+      e.target.value = '';
+      return;
+    }
+
+    setIsUploadingLogo(true);
+    setMessage('');
+
+    try {
+      const filePath = `site-assets/logo/${Date.now()}-${sanitizeFileName(file.name)}`;
+      const { error } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file, { upsert: false });
+
+      if (error) {
+        setMessage(`Logo upload failed: ${error.message}`);
+        return;
+      }
+
+      const { data } = supabase.storage.from('product-images').getPublicUrl(filePath);
+      setSiteContentEdits((previous) => ({ ...previous, logo_url: data.publicUrl }));
+      setMessage('Logo uploaded. Save Page Content to apply it.');
+    } catch {
+      setMessage('Logo upload failed. Please try again.');
+    } finally {
+      setIsUploadingLogo(false);
       e.target.value = '';
     }
   };
@@ -1735,6 +1778,40 @@ export function Admin() {
                       onChange={(e) => setSiteContentEdits((prev) => ({ ...prev, brand_name: e.target.value }))}
                       className="w-full border border-gray-300 rounded px-3 py-2"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Brand Logo</label>
+                    <div className="flex flex-wrap items-center gap-4">
+                      <div className="flex h-20 w-20 items-center justify-center border border-gray-200 bg-gray-50 p-2">
+                        <img
+                          src={siteContentEdits.logo_url || `${import.meta.env.BASE_URL}trios-art-logo.jpeg`}
+                          alt="Brand logo preview"
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <label className="cursor-pointer rounded border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50">
+                          {isUploadingLogo ? 'Uploading...' : siteContentEdits.logo_url ? 'Change logo' : 'Upload logo'}
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            className="hidden"
+                            onChange={handleUploadLogo}
+                            disabled={isUploadingLogo}
+                          />
+                        </label>
+                        {siteContentEdits.logo_url && (
+                          <button
+                            type="button"
+                            onClick={() => setSiteContentEdits((previous) => ({ ...previous, logo_url: '' }))}
+                            className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          >
+                            Restore default
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500">JPEG, PNG, WebP, or GIF. Maximum 7 MB. Save Page Content to apply changes.</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Browser Tab Title</label>

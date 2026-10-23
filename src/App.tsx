@@ -58,6 +58,7 @@ interface CategoryOption {
 
 interface SiteContent {
   brand_name?: string;
+  logo_url?: string;
   site_tab_title?: string;
   site_meta_description?: string;
   hero_title?: string;
@@ -417,7 +418,13 @@ function App() {
         siteContent.site_meta_description || defaultSiteContent.site_meta_description || ''
       );
     }
-  }, [siteContent.site_tab_title, siteContent.site_meta_description]);
+
+    const favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (favicon) {
+      favicon.href = siteContent.logo_url || `${import.meta.env.BASE_URL}trios-art-logo.jpeg`;
+      favicon.removeAttribute('type');
+    }
+  }, [siteContent.site_tab_title, siteContent.site_meta_description, siteContent.logo_url]);
 
   const mergedCategories = useMemo(() => {
     const categoryMap = new Map<string, CategoryOption>();
@@ -624,8 +631,11 @@ function App() {
               updateProductUrl();
             }}
           >
-            <Palette className="h-7 w-7 text-[#A67C52]" />
-            <span className="font-heading text-2xl">{siteContent.brand_name || 'Trios Art'}</span>
+            <img
+              src={siteContent.logo_url || `${import.meta.env.BASE_URL}trios-art-logo.jpeg`}
+              alt={siteContent.brand_name || 'Trios Art'}
+              className="h-14 w-14 shrink-0 object-contain"
+            />
           </button>
           <a
             href={whatsappLink}
