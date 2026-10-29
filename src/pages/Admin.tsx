@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { createClient, type Session } from '@supabase/supabase-js';
 import { Minus, Plus } from 'lucide-react';
 import { products as staticProducts, categories as defaultCategories } from '../data/products';
+import { resolveCategoryOptions } from '../data/categoryOptions';
 import { Product } from '../types';
 import { CategoryManager } from './admin/components/CategoryManager';
 import { ProductForm } from './admin/components/ProductForm';
@@ -280,29 +281,10 @@ export function Admin() {
     return [...products].sort((a, b) => a.name.localeCompare(b.name));
   }, [products]);
 
-  const categoryOptions = useMemo(() => {
-    const categoryMap = new Map<string, CategoryOption>();
-
-    for (const category of defaultCategories) {
-      if (category.id === 'all') continue;
-      categoryMap.set(category.id, { id: category.id, name: category.name });
-    }
-
-    for (const category of customCategories) {
-      categoryMap.set(category.id, category);
-    }
-
-    for (const product of products) {
-      const id = normalizeCategoryId(product.category);
-      if (!id || id === 'all') continue;
-      if (!categoryMap.has(id)) {
-        categoryMap.set(id, { id, name: formatCategoryName(id) });
-      }
-    }
-
-    return Array.from(categoryMap.values())
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [customCategories, products]);
+  const categoryOptions = useMemo(
+    () => resolveCategoryOptions(defaultCategories, customCategories, products, true),
+    [customCategories, products]
+  );
 
   const getCategoryProductImages = (categoryId: string) => {
     return Array.from(
@@ -1403,7 +1385,19 @@ export function Admin() {
         }
       }
 
-      setMessage('Site content saved successfully.');
+      const metadataChanged = ['site_tab_title', 'site_meta_description'].some(
+        (key) => (savedSiteContent[key] || '') !== (siteContentEdits[key] || '')
+      );
+      if (metadataChanged) {
+        const { error: publishError } = await supabase.functions.invoke('publish-site-metadata');
+        if (publishError) {
+          setMessage('Site content saved, but metadata publishing could not be queued. Save again to retry.');
+          return;
+        }
+        setMessage('Site content saved. Metadata publishing has been queued.');
+      } else {
+        setMessage('Site content saved successfully.');
+      }
       setSavedSiteContent(siteContentEdits);
     } finally {
       setIsSavingSiteContent(false);
@@ -1824,7 +1818,7 @@ export function Admin() {
                         )}
                       </div>
                     </div>
-                    <p className="mt-2 text-xs text-gray-500">JPEG, PNG, WebP, or GIF. Maximum 7 MB. Save Page Content to apply changes.</p>
+                    <p className="mt-2 text-xs text-gray-500">JPEG, PNG, WebP, or GIF. Maximum 7 MB. Save Page Content to publish changes.</p>
                     <div className="mt-3 flex items-center gap-2">
                       <button
                         type="button"

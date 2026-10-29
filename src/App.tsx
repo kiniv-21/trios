@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { categories as defaultCategories, products as staticProducts } from './data/products';
+import { resolveCategoryOptions } from './data/categoryOptions';
 import { Product } from './types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -427,31 +428,10 @@ function App() {
     }
   }, [siteContent.site_tab_title, siteContent.site_meta_description, siteContent.logo_url]);
 
-  const mergedCategories = useMemo(() => {
-    const categoryMap = new Map<string, CategoryOption>();
-
-    if (!supabase) {
-      for (const category of defaultCategories) {
-        if (category.id === 'all') continue;
-        categoryMap.set(category.id, { id: category.id, name: category.name });
-      }
-    }
-
-    for (const category of storedCategories) {
-      categoryMap.set(category.id, category);
-    }
-
-    for (const product of products) {
-      const id = normalizeCategoryId(product.category);
-      if (!id || id === 'all') continue;
-      if (!categoryMap.has(id)) {
-        categoryMap.set(id, { id, name: formatCategoryName(id) });
-      }
-    }
-
-    return Array.from(categoryMap.values())
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [products, storedCategories]);
+  const mergedCategories = useMemo(
+    () => resolveCategoryOptions(defaultCategories, storedCategories, products, !supabase),
+    [products, storedCategories]
+  );
 
   const categoryCovers = useMemo(() => {
     const map: Record<string, string> = {};
